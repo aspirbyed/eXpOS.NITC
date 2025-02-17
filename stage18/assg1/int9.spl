@@ -1,0 +1,121 @@
+alias userSP R5;
+userSP = SP;
+
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 13] = SP;
+SP = [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 11] * 512 - 1;
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 9] = 9;
+
+alias fileName R6;
+fileName = [[PTBR + 2 * ((userSP - 4) / 512)] * 512 + (userSP - 4) % 512];
+
+alias inodeEntry R7;
+alias found R8;
+found = 0;
+inodeEntry = 0;
+
+while(inodeEntry < MAX_FILE_NUM) do
+    if ([INODE_TABLE + inodeEntry * 16 + 1] == fileName && [INODE_TABLE + inodeEntry * 16] == EXEC) then
+        found = 1;
+        break;
+    endif;
+    inodeEntry = inodeEntry + 1;
+endwhile;
+
+if (found == 0) then
+    SP = userSP;
+    [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 9] = 0;
+    [[PTBR + 2 * ((userSP - 1) / 512)] * 512 + (userSP - 1) % 512] = -1;
+    ireturn;
+endif;
+
+multipush(R5,R6,R7);
+R1 = 3;
+R2 = [SYSTEM_STATUS_TABLE + 1];
+call MOD_1;
+multipop(R5,R6,R7);
+
+alias userAreaPAgeNumber R8;
+userAreaPAgeNumber = [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 11];
+
+[MEMORY_FREE_LIST + userAreaPAgeNumber] = [MEMORY_FREE_LIST + userAreaPAgeNumber] + 1;
+
+[SYSTEM_STATUS_TABLE + 2] = [SYSTEM_STATUS_TABLE + 2] - 1;
+
+SP = userAreaPAgeNumber * 512 - 1;
+
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 4] = RUNNING;
+
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 7] = inodeEntry;
+
+// Library
+[PTBR + 0] = 63;
+[PTBR + 1] = "0100";
+[PTBR + 2] = 64;
+[PTBR + 3] = "0100";
+
+multipush(R5,R6,R7,R8);
+
+// Heap
+R1 = 1;
+call MOD_2;
+[PTBR + 4] = R0;
+[PTBR + 5] = "0110";
+
+R1 = 1;
+call MOD_2;
+[PTBR + 6] = R0;
+[PTBR + 7] = "0110";
+
+// Stack
+R1 = 1;
+call MOD_2;
+[PTBR + 16] = R0;
+[PTBR + 17] = "0110";
+
+R1 = 1;
+call MOD_2;
+[PTBR + 18] = R0;
+[PTBR + 19] = "0110";
+
+multipop(R5,R6,R7,R8);
+
+// Code
+alias i R8;
+i = 0;
+while (i < 4) do
+    if ([INODE_TABLE + inodeEntry * 16 + 8 + i] != -1) then
+        multipush(R5,R6,R7,R8);
+        R1 = 1;
+		call MOD_2;
+		[PTBR + 8 + 2 * i] = R0;
+		[PTBR + 9 + 2 * i] = "0100";
+        multipop(R5,R6,R7,R8);
+
+        multipush(R5,R6,R7,R8);
+        R4 = [INODE_TABLE + inodeEntry * 16 + 8 + i];
+        R3 = [PTBR + 8 + 2 * i];
+        R1 = 2;
+        R2 = [SYSTEM_STATUS_TABLE + 1];
+        call MOD_4;
+        multipop(R5,R6,R7,R8);
+    else
+        [PTBR + 8 + 2 * i] = -1;
+		[PTBR + 9 + 2 * i] = "0000";
+    endif;
+    i = i + 1;
+endwhile;
+
+// per-process resource table initialization
+i = 1;
+while (i < 9) do
+    [([PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 11] + 1) * 512 - 2 * i] = -1;
+    i = i + 1;
+endwhile;
+
+[[PTBR + 16] * 512] = [[PTBR + 8] * 512 + 1];
+
+SP = 8 * 512;
+
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 9] = 0;
+
+ireturn;

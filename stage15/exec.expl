@@ -1,0 +1,28 @@
+decl
+	int fun(int a);
+enddecl
+
+int fun(int a){
+	decl
+		int temp;
+	enddecl
+	begin
+		temp = exposcall("Write", -2, a);
+		a = a + 2;
+		return a;
+	end
+}
+
+int main()
+{
+	decl
+		int temp, a;
+	enddecl
+	begin
+		a = 2;
+		while(a <= 100)do
+			a = fun(a);
+		endwhile;
+		return 0;
+	end
+}

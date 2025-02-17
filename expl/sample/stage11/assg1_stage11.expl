@@ -1,0 +1,17 @@
+int main()
+{
+	decl 
+		int temp, num;
+	enddecl
+	begin
+		num = 1;
+		while(num <= 100)do
+			// Do you know about mod lol
+			if((num % 2) == 1)then
+				temp = exposcall("Write", -2, num);
+			endif;
+			num = num + 1;
+		endwhile;
+		return 0;
+	end
+}

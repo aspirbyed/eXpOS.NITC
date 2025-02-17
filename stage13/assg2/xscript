@@ -1,0 +1,9 @@
+load --library ../expl/library.lib
+load --exec ../stage13/assg2/exec.xsm
+load --idle ../stage13/assg2/idle.xsm
+load --init ../stage13/assg2/init.xsm
+load --module 7 ../stage13/assg2/mod7.xsm
+load --int=timer ../stage13/assg2/timer.xsm
+load --int=7 ../stage13/assg2/sample_int7.xsm
+load --int=10 ../stage13/assg2/int10.xsm
+load --os ../stage13/assg2/os.xsm

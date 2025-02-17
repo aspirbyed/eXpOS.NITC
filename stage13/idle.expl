@@ -1,0 +1,13 @@
+int main()
+{
+	decl
+		int a;
+	enddecl
+	begin
+		a = 101;
+		while (a == 101) do
+			a = 101;
+		endwhile;
+		return 0;
+	end
+}
