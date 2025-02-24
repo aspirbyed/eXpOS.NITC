@@ -3,7 +3,11 @@ userSP = SP;
 
 [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 13] = SP;
 SP = [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 11] * 512 - 1;
+<<<<<<< HEAD
 
+=======
+[SYSTEM_STATUS_TABLE + 25] = [SYSTEM_STATUS_TABLE + 25] + 1; // Kernel Switches
+>>>>>>> b2f6dfa (Git Commit)
 alias syscall R6;
 syscall = [[PTBR + 2 * (userSP - 5) / 512] * 512 + (userSP - 5) % 512];
 [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 9] = syscall;

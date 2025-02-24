@@ -1,6 +1,11 @@
 [PROCESS_TABLE + ( [SYSTEM_STATUS_TABLE + 1] * 16) + 13] = SP;
 SP = [PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16) + 11] * 512 - 1;
 
+<<<<<<< HEAD
+=======
+[SYSTEM_STATUS_TABLE + 25] = [SYSTEM_STATUS_TABLE + 25] + 1; // Kernel Switches
+
+>>>>>>> b2f6dfa (Git Commit)
 backup;
 
 alias currentPID R0;
@@ -11,6 +16,18 @@ process_table_entry = PROCESS_TABLE + currentPID * 16;
 
 [process_table_entry + 4] = READY;
 
+<<<<<<< HEAD
+=======
+// Max Memory Usage
+multipush(R0,R1);
+alias prev R1; 
+prev = [SYSTEM_STATUS_TABLE + 24];
+if (128 - [SYSTEM_STATUS_TABLE + 2] > prev) then
+	[SYSTEM_STATUS_TABLE + 24] = 128 - [SYSTEM_STATUS_TABLE + 2];
+endif;
+multipop(R0,R1);
+
+>>>>>>> b2f6dfa (Git Commit)
 call MOD_5;
 
 restore;

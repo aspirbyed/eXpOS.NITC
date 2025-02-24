@@ -1,0 +1,20 @@
+load --module 0 ../stage22/module0.xsm
+load --module 1 ../stage22/module1.xsm
+load --module 2 ../stage22/module2.xsm
+load --module 4 ../stage22/module4.xsm
+load --module 5 ../stage22/module5.xsm
+load --module 7 ../stage22/module7.xsm
+load --int=6 ../stage22/int6.xsm
+load --int=7 ../stage22/int7.xsm
+load --int=8 ../stage22/int8.xsm
+load --int=9 ../stage22/int9.xsm
+load --int=10 ../stage22/int10.xsm
+load --exhandler ../stage20/exhandler.xsm
+load --int=timer ../stage20/timer.xsm
+load --int=disk ../stage20/disk.xsm
+load --int=console ../stage20/console.xsm
+load --exec ../stage20/exec.xsm
+load --exec ../stage20/odd.xsm
+load --init ../stage20/init.xsm
+load --idle ../stage20/idle.xsm
+load --os ../stage20/os.xsm

@@ -166,7 +166,11 @@ MOV R16, 30032
 MOV R17, 10
 MUL R17, R2
 ADD R16, R17
+<<<<<<< HEAD
 ADD R16, 2
+=======
+ADD R16, R3
+>>>>>>> b2f6dfa (Git Commit)
 MOV [R16], -1
 MOV R16, R3
 ADD R16, 1

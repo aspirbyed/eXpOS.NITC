@@ -27,6 +27,16 @@ MOV [R16], 1
 MOV R16, 29552
 ADD R16, 4
 MOV [R16], R2
+<<<<<<< HEAD
+=======
+MOV R16, 29560
+ADD R16, 25
+MOV R17, 29560
+ADD R17, 25
+MOV R17, [R17]
+ADD R17, 1
+MOV [R16], R17
+>>>>>>> b2f6dfa (Git Commit)
 RET
 JMP _L2
 _L1:

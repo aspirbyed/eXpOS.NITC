@@ -30,6 +30,12 @@ PTLR = [PROCESS_TABLE + newPID * 16 + 15];
 
 [SYSTEM_STATUS_TABLE+1] = newPID;
 
+<<<<<<< HEAD
+=======
+// Context Switches
+[SYSTEM_STATUS_TABLE + 26] = [SYSTEM_STATUS_TABLE + 26] + 1;
+
+>>>>>>> b2f6dfa (Git Commit)
 if ([PROCESS_TABLE + newPID * 16 + 4] == CREATED) then
 	SP = [PROCESS_TABLE + newPID * 16 + 13];
 	BP = [[PROCESS_TABLE + newPID * 16 + 11] * 512];

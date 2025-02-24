@@ -168,6 +168,13 @@ endwhile;
 [SYSTEM_STATUS_TABLE + 3] = 0; // WAIT_MEM_COUNT
 [SYSTEM_STATUS_TABLE + 2] = 45; // MEM_FREE_COUNT
 
+<<<<<<< HEAD
+=======
+[SYSTEM_STATUS_TABLE + 24] = 0; // Max Memory Usage
+[SYSTEM_STATUS_TABLE + 25] = 0; // Disk Access
+[SYSTEM_STATUS_TABLE + 26] = 0; // Context Switches
+
+>>>>>>> b2f6dfa (Git Commit)
 // Disk Map Table
 [DISK_MAP_TABLE + 10 + 2] = -1;
 [DISK_MAP_TABLE + 10 + 3] = -1;

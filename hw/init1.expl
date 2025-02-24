@@ -1,0 +1,33 @@
+int main()
+{
+decl
+    int t, n, pid1, pid2, pid3, pid4;
+int t1, t2, t3, t4,t5,t6,t7,t8;
+enddecl
+begin
+	n = exposcall("Fork");
+        if (n == 0) then
+                t1 = exposcall("Exec","even.xsm");
+        endif;
+    	pid1 = exposcall("Fork");
+	if (pid1 == 0) then
+		t2 = exposcall("Exec","p1.xsm");
+	endif;
+	pid2 = exposcall("Fork");
+        if (pid2 == 0) then
+                t3 = exposcall("Exec","p2.xsm");
+        endif;
+	pid3 = exposcall("Fork");
+        if (pid3 == 0) then
+                t4 = exposcall("Exec","p3.xsm");
+        endif;
+	pid4 = exposcall("Fork");
+        if (pid4 == 0) then
+                t5 = exposcall("Exec","p4.xsm");
+        endif;
+
+	t8 = exposcall("Wait",n);
+	t7 = exposcall("Shutdown");
+	return 0;
+end
+}

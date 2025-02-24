@@ -13,6 +13,12 @@ if (funNum == 3) then
     [DISK_STATUS_TABLE + 0] = 1;
     [DISK_STATUS_TABLE + 4] = currentPID;
 
+<<<<<<< HEAD
+=======
+    // Disk Access
+    [SYSTEM_STATUS_TABLE + 25] = [SYSTEM_STATUS_TABLE + 25] + 1;
+
+>>>>>>> b2f6dfa (Git Commit)
     return;
 endif;
 

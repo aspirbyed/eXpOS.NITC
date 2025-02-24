@@ -2,7 +2,11 @@
 [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 13] = SP;
 SP = [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 11] * 512 - 1;
 backup;
+<<<<<<< HEAD
 
+=======
+[SYSTEM_STATUS_TABLE + 25] = [SYSTEM_STATUS_TABLE + 25] + 1; // Kernel Switches
+>>>>>>> b2f6dfa (Git Commit)
 multipush(EIP);
 
 if (EC != 0 || [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 13] == PTLR * 512 - 1) then

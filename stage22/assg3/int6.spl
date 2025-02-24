@@ -7,7 +7,11 @@ userSP = SP;
 [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 13] = userSP;
 
 SP = [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 11] * 512 - 1;
+<<<<<<< HEAD
 
+=======
+[SYSTEM_STATUS_TABLE + 25] = [SYSTEM_STATUS_TABLE + 25] + 1; // Kernel Switches
+>>>>>>> b2f6dfa (Git Commit)
 alias physicalPageNumber R1;
 alias offset R2;
 alias physicalAddress R3;
