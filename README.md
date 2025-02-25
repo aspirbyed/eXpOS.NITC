@@ -22,6 +22,11 @@ If it already exists but points to an old repo, update it:
 git remote set-url origin <your-repo-url>
 ```
 
+To remove the remote origin from your Git repository
+```
+git remote remove origin
+```
+
 Stage all files
 ```
 git add --all
