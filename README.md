@@ -35,13 +35,3 @@ Commit the changes
 ```
 git commit -m "Git Commit"
 ```
-
-Force push to GitHub (This WILL ERASE the existing repository files!)
-```
-git push --force origin main
-```
-(Use master instead of main if your repository uses master as the default branch.)
-
-⚠️ Warning:
-- This will completely overwrite all previous files and commits on GitHub.
-- If the old repo has any collaborators, history, or issues you care about, consider backing up first.
