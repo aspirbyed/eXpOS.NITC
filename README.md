@@ -33,7 +33,7 @@ git add --all
 
 Commit the changes
 ```
-git commit -m "Replacing old repository with latest files"
+git commit -m "Git Commit"
 ```
 
 Force push to GitHub (This WILL ERASE the existing repository files!)
