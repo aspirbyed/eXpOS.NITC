@@ -1,0 +1,129 @@
+// Process Manager Module
+alias funNum R1;
+alias pid R2;
+
+if (funNum == 1) then
+	// Get Pcb Entry
+	alias i R3;
+	alias pid R0;
+	pid = -1;
+	i = 0;
+	while (i < 16) do
+		if ([PROCESS_TABLE + i * 16 + 4] == TERMINATED) then
+			pid = i;
+			break;
+		endif;
+		i = i + 1;
+	endwhile;
+	if (pid == -1) then
+		return;
+	endif;
+	[PROCESS_TABLE + pid * 16 + 1] = pid;
+	[PROCESS_TABLE + pid * 16 + 4] = ALLOCATED;
+	[PROCESS_TABLE + pid * 16 + 14] = PAGE_TABLE_BASE + pid * 20;
+	[PROCESS_TABLE + pid * 16 + 15] = 10;
+	return;
+endif;
+
+if (funNum == 2) then
+        // Free User Area Page
+
+	alias i R3;
+	i = 0;
+	while (i < 8) do
+		if ([[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 11] * 512 + 496 + 2 * i] == 1) then
+			multipush(R1,R2,R3);
+			R1 = 7;
+			R2 = [SYSTEM_STATUS_TABLE + 1];
+			R3 = [[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 11] * 512 + 496 + 2 * i + 1];
+			call MOD_0;
+			multipop(R1,R2,R3);
+		endif;
+		i = i + 1;
+	endwhile;
+
+	multipush(R1,R2);
+        R1 = 2;
+        R2 = [PROCESS_TABLE + pid * 16 + 11];
+        call MOD_2;
+        multipop(R1,R2);
+
+        return;
+endif;
+ 
+if (funNum == 3) then
+	// Exit Process
+	
+	multipush(R1,R2);
+	
+	R1 = 4;
+	R2 = pid;
+	call MOD_1;
+
+	multipop(R1,R2);
+
+	multipush(R1,R2);
+
+        R1 = 2;
+	R2 = pid;
+        call MOD_1;
+
+        multipop(R1,R2);
+	
+	[PROCESS_TABLE + pid * 16 + 4] = TERMINATED;	
+	
+	if ([PROCESS_TABLE + pid * 16 + 9] != 9) then
+		alias i R6;
+		i = 0;
+		while (i < 16) do
+			if ([PROCESS_TABLE + i * 16 + 4] == WAIT_PROCESS && [PROCESS_TABLE + i * 16 + 5] == pid) then
+				[PROCESS_TABLE + i * 16 + 4] = READY;
+			endif;
+			if ([PROCESS_TABLE + i * 16 + 2] == pid) then
+                                [PROCESS_TABLE + i * 16 + 2] = -1;
+                        endif;
+			i = i + 1;
+		endwhile;
+	endif;
+
+	return;
+endif;
+
+if (funNum == 4) then
+	// Free Page Table
+
+	[PAGE_TABLE_BASE + pid * 20 + 0] = -1;
+	[PAGE_TABLE_BASE + pid * 20 + 1] = "0000";
+	[PAGE_TABLE_BASE + pid * 20 + 2] = -1;
+	[PAGE_TABLE_BASE + pid * 20 + 3] = "0000";
+
+	alias i  R3;		
+	i = 4;
+	while (i < 20) do
+		if ([PAGE_TABLE_BASE + pid * 20 + i] != -1) then
+			multipush(R1,R2,R3);
+        		R1 = 2;
+			R2 = [PAGE_TABLE_BASE + pid * 20 + i];
+        		call MOD_2;
+        		multipop(R1,R2,R3);
+		endif;
+		[PAGE_TABLE_BASE + pid * 20 + i] = -1;
+		i = i + 1;
+		[PAGE_TABLE_BASE + pid * 20 + i] = "0000";
+		i = i + 1;
+	endwhile;
+	
+	i = 2;
+	while (i < 10) do
+		if ((i <= 3 || i >= 8) && [DISK_MAP_TABLE + 10 * pid + i] != -1) then
+                	multipush(R1,R2,R3);
+                	R1 = 4;
+                	R2 = [DISK_MAP_TABLE + 10 * pid + i];
+                	call MOD_2;
+                	multipop(R1,R2,R3);
+        	endif;
+		[DISK_MAP_TABLE + 10 * pid + i] = -1;
+		i = i + 1;
+	endwhile;
+	return;
+endif;

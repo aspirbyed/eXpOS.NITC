@@ -1,0 +1,30 @@
+[PROCESS_TABLE + ( [SYSTEM_STATUS_TABLE + 1] * 16) + 13] = SP;
+SP = [PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16) + 11] * 512 - 1;
+
+backup;
+
+alias currentPID R0;
+currentPID = [SYSTEM_STATUS_TABLE+1];
+
+alias process_table_entry R1;
+process_table_entry = PROCESS_TABLE + currentPID * 16;
+
+[process_table_entry + 4] = READY;
+
+// Max Memory Usage
+multipush(R0,R1);
+alias prev R1; 
+prev = [SYSTEM_STATUS_TABLE + 24];
+if (128 - [SYSTEM_STATUS_TABLE + 2] > prev) then
+	[SYSTEM_STATUS_TABLE + 24] = 128 - [SYSTEM_STATUS_TABLE + 2];
+endif;
+multipop(R0,R1);
+
+call MOD_5;
+
+restore;
+
+SP = [PROCESS_TABLE + ( [SYSTEM_STATUS_TABLE + 1] * 16) + 13];
+[PROCESS_TABLE + ( [SYSTEM_STATUS_TABLE + 1] * 16) + 9] = 0;
+[PROCESS_TABLE + ( [SYSTEM_STATUS_TABLE + 1] * 16) + 12] = 0;
+ireturn;

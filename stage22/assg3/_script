@@ -1,0 +1,26 @@
+load --module 0 ../stage22/assg3/module0.xsm
+load --module 1 ../stage22/assg3/module1.xsm
+load --module 2 ../stage22/assg3/module2.xsm
+load --module 4 ../stage22/assg3/module4.xsm
+load --module 5 ../stage22/assg3/module5.xsm
+load --module 7 ../stage22/assg3/module7.xsm
+load --exhandler ../stage22/assg3/exhandler.xsm
+load --int=timer ../stage22/assg3/timer.xsm
+load --int=disk ../stage22/assg3/disk.xsm
+load --int=console ../stage22/assg3/console.xsm
+load --int=6 ../stage22/assg3/int6.xsm
+load --int=7 ../stage22/assg3/int7.xsm
+load --int=8 ../stage22/assg3/int8.xsm
+load --int=9 ../stage22/assg3/int9.xsm
+load --int=10 ../stage22/assg3/int10.xsm
+load --int=11 ../stage22/assg3/int11.xsm
+load --int=13 ../stage22/assg3/int13.xsm
+load --int=14 ../stage22/assg3/int14.xsm
+load --int=15 ../stage22/assg3/int15.xsm
+load --exec ../stage22/assg3/con.xsm
+load --exec ../stage22/assg3/seq.xsm
+load --exec ../stage22/assg3/even.xsm
+load --exec ../stage22/assg3/odd.xsm
+load --init ../stage22/assg3/init.xsm
+load --idle ../stage22/assg3/idle.xsm
+load --os ../stage22/assg3/os.xsm

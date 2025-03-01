@@ -1,0 +1,149 @@
+alias funNum R1;
+alias currentPID R2;
+
+if (funNum == 3) then
+    // Acquire Disk
+    while ([DISK_STATUS_TABLE + 0] == 1) do
+	[PROCESS_TABLE + currentPID * 16 + 4] = WAIT_DISK;
+	multipush(R1,R2);
+        call MOD_5;
+        multipop(R1,R2);
+    endwhile;
+
+    [DISK_STATUS_TABLE + 0] = 1;
+    [DISK_STATUS_TABLE + 4] = currentPID;
+
+    return;
+endif;
+
+if (funNum == 4) then
+        // Acquire Inode
+        alias inodeIndex R2;
+        alias pid R3;
+
+        while ([FILE_STATUS_TABLE + inodeIndex * 4] != -1) do
+                [PROCESS_TABLE + pid * 16 + 4] = WAIT_FILE;
+                [PROCESS_TABLE + pid * 16 + 5] = inodeIndex;
+                multipush(R1,R2,R3);
+                call MOD_5;
+                multipop(R1,R2,R3);
+        endwhile;
+
+        if ([INODE_TABLE + inodeIndex * 16 + 1] == -1) then
+                R0 = -1;
+                return;
+        endif;
+
+        [FILE_STATUS_TABLE + inodeIndex * 4] = pid;
+
+        R0 = 0;
+        return;
+endif;
+
+if (funNum == 5) then
+        // Release Inode
+        alias inodeIndex R2;
+        alias pid R3;
+
+        if ([FILE_STATUS_TABLE + inodeIndex * 16] != pid) then
+                R0 = -1;
+                return;
+        endif;
+
+        [FILE_STATUS_TABLE + inodeIndex * 16] = -1;
+
+        alias i R4;
+        i = 1;
+        while (i < 16) do
+                if ([PROCESS_TABLE + i * 16 + 4] == WAIT_FILE && [PROCESS_TABLE + i * 16 + 5] == inodeIndex) then
+                        [PROCESS_TABLE + i * 16 + 4] = READY;
+                        [PROCESS_TABLE + i * 16 + 5] = -1;
+                endif;
+                i = i + 1;
+        endwhile;
+        
+        R0 = 0;
+        return;
+endif;
+
+if (funNum == 6) then
+	// Acquire Semaphore
+
+	alias i R2;
+	i = 0;
+
+	alias id R0;
+	id = -1;
+
+	while (i < MAX_SEM_COUNT) do
+		if ([SEMAPHORE_TABLE + i * 4 + 1] == 0) then
+			id = i;
+			[SEMAPHORE_TABLE + id * 4 + 0] = -1;
+			[SEMAPHORE_TABLE + id * 4 + 1] = 1;
+			break;
+		endif;
+		i = i + 1;
+	endwhile;
+
+	return;
+endif;
+
+if (funNum == 7) then
+	// Release Semaphore
+
+	alias pid R2;
+	alias id R3;
+	if ([SEMAPHORE_TABLE + id * 4 + 0] == pid) then
+		[SEMAPHORE_TABLE + id * 4 + 0] = -1;
+		alias i R4;
+		i = 0;
+		while (i < 16) do
+			if ([PROCESS_TABLE + i * 16 + 4] == WAIT_SEMAPHORE && [PROCESS_TABLE + i * 16 + 5] == id) then
+				[PROCESS_TABLE + i * 16 + 4] = READY;
+				[PROCESS_TABLE + i * 16 + 5] = -1;
+			endif;
+			i = i + 1;
+		endwhile;
+	endif;
+
+	[SEMAPHORE_TABLE + id * 4 + 1] = [SEMAPHORE_TABLE + id * 4 + 1] - 1;
+	R0 = 0;
+	return;
+endif;
+
+if (funNum == 8) then
+    // Acquire Terminal
+    while ([TERMINAL_STATUS_TABLE + 0] == 1) do
+        [PROCESS_TABLE + (currentPID * 16) + 4] = WAIT_TERMINAL;
+        multipush(R1,R2);
+        call MOD_5;
+        multipop(R1,R2);
+    endwhile;
+    [TERMINAL_STATUS_TABLE + 0] = 1;
+    [TERMINAL_STATUS_TABLE + 1] = currentPID;
+    return;
+endif;
+
+if (funNum == 9) then
+    // Release Terminal
+    alias i R0;
+    if (currentPID != [TERMINAL_STATUS_TABLE + 1]) then
+        i = -1;
+        return;
+    else
+        [TERMINAL_STATUS_TABLE + 0] = 0;
+        i = 0;
+        while (i < 16) do
+            if ([PROCESS_TABLE + i * 16 + 4] == WAIT_TERMINAL) then
+                [PROCESS_TABLE + i * 16 + 4] = READY;
+            endif;
+            i = i + 1;
+        endwhile;
+        i = 0;
+	return;
+    endif;
+else
+    alias i R0;
+    i = -1;
+    return;
+endif;

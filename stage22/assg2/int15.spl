@@ -1,0 +1,7 @@
+print "Memory Usage";
+print [SYSTEM_STATUS_TABLE + 24];
+print "Disk Access";
+print [SYSTEM_STATUS_TABLE + 25];
+print "Context Switches";
+print [SYSTEM_STATUS_TABLE + 26];
+halt;

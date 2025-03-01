@@ -1,0 +1,126 @@
+alias userSP R0;
+userSP = SP;
+alias pid R2;
+
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 13] = SP;
+SP = [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 11] * 512 - 1;
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 9] = 8;
+
+multipush(R0);
+R1 = 1;
+call MOD_1;
+pid = R0;
+multipop(R0);
+
+if (pid == -1) then
+	[[PTBR+ 2 * ((userSP - 1) / 512)] * 512 + (userSP - 1) % 512] = -1;
+	SP = [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 13];
+	[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 9] = 0;
+	ireturn;
+endif;
+
+if([PTBR + 4] == -1) then
+	multipush(R0,R2);
+	R1 = 1;
+	call MOD_2;
+	[PTBR + 4] = R0;
+	[PTBR + 5] = "0110";
+	multipop(R0,R2);
+endif;
+
+if([PTBR + 6] == -1) then
+	multipush(R0,R2);
+	R1 = 1;
+	call MOD_2;
+	[PTBR + 6] = R0;
+	[PTBR + 7] = "0110";
+	multipop(R0,R2);
+endif;
+
+// Stack of child
+multipush(R0,R2);
+R1 = 1;
+call MOD_2;
+[PAGE_TABLE_BASE + pid * 20 + 16] = R0;
+[PAGE_TABLE_BASE + pid * 20 + 17] = "0110";
+R1 = 1;
+call MOD_2;
+[PAGE_TABLE_BASE + pid * 20 + 18] = R0;
+[PAGE_TABLE_BASE + pid * 20 + 19] = "0110";
+multipop(R0,R2);
+
+alias UAPN R3;
+multipush(R0,R2);
+R1 = 1;
+call MOD_2;
+UAPN = R0;
+multipop(R0,R2);
+
+// Proces Table for child
+[PROCESS_TABLE + pid * 16 + 3] = [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 3]; // USERID
+[PROCESS_TABLE + pid * 16 + 6] = [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 6]; // SWAP FLAG
+[PROCESS_TABLE + pid * 16 + 7] = [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 7]; // INODE INDEX
+[PROCESS_TABLE + pid * 16 + 10] = [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 10]; // USER AREA SWAP STATUS
+[PROCESS_TABLE + pid * 16 + 13] = [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 13]; // USER STACK POINTER (UPTR)
+[PROCESS_TABLE + pid * 16 + 2] = [SYSTEM_STATUS_TABLE + 1]; // PPID
+[PROCESS_TABLE + pid * 16 + 11] = UAPN; // USER AREA PAGE NUMBER
+[PROCESS_TABLE + pid * 16 + 9] = 0; // MODE FLAG
+[PROCESS_TABLE + pid * 16 + 0] = 0; // TICK
+[PROCESS_TABLE + pid * 16 + 12] = 0; // KERNEL STACK POINTER (KPTR)
+[PROCESS_TABLE + pid * 16 + 4] = CREATED;
+
+// Per-process Resource table for child
+alias i R4;
+i = 512 - 16;
+while (i < 512) do
+    [[PROCESS_TABLE + pid * 16 + 11] * 512 + i] = [[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 11] * 512 + i];
+    [[PROCESS_TABLE + pid * 16 + 11] * 512 + i + 1] = [[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 11] * 512 + i + 1];
+    if ([[PROCESS_TABLE + pid * 16 + 11] * 512 + i] == 1) then
+        [SEMAPHORE_TABLE + [[PROCESS_TABLE + pid * 16 + 11] * 512 + i + 1] * 4 + 1] = [SEMAPHORE_TABLE + [[PROCESS_TABLE + pid * 16 + 11] * 512 + i + 1] * 4 + 1] + 1;
+    endif;
+    i = i + 2;
+endwhile;
+
+// Per-process Disk Map table for child
+i = 2;
+while (i < 10) do
+	[DISK_MAP_TABLE + pid * 10 + i] = [DISK_MAP_TABLE + [SYSTEM_STATUS_TABLE + 1] * 10 + i];
+	i = i + 1;
+endwhile;
+
+// Page Table of child
+i = 0;
+while (i < 16) do
+	if ([PAGE_TABLE_BASE + [SYSTEM_STATUS_TABLE + 1] * 20 + i] != -1) then
+		[MEMORY_FREE_LIST + [PAGE_TABLE_BASE + [SYSTEM_STATUS_TABLE + 1] * 20 + i]] = [MEMORY_FREE_LIST + [PAGE_TABLE_BASE + [SYSTEM_STATUS_TABLE + 1] * 20 + i]] + 1;
+	endif;
+	[PAGE_TABLE_BASE + pid * 20 + i] = [PAGE_TABLE_BASE + [SYSTEM_STATUS_TABLE + 1] * 20 + i];
+	i = i + 1;
+	[PAGE_TABLE_BASE + pid * 20 + i] = [PAGE_TABLE_BASE + [SYSTEM_STATUS_TABLE + 1] * 20 + i];
+	i = i + 1;
+endwhile;
+
+// Copy User Stack Contents
+// Page 1
+i = 0;
+while (i < 512) do
+	[[PAGE_TABLE_BASE + pid * 20 + 16] * 512 + i] = [[PTBR + 16] * 512 + i];
+	i = i + 1;
+endwhile;
+// Page 2
+i = 0;
+while (i < 512) do
+	[[PAGE_TABLE_BASE + pid * 20 + 18] * 512 + i] = [[PTBR + 18] * 512 + i];
+	i = i + 1;
+endwhile;
+
+[[PROCESS_TABLE + pid * 16 + 11] * 512] = BP;
+
+// Return value
+[[PAGE_TABLE_BASE + [SYSTEM_STATUS_TABLE + 1] * 20 + 2 * ((userSP - 1) / 512)] * 512 + (userSP - 1) % 512] = pid;
+[[PAGE_TABLE_BASE + pid * 20 + 2 * ((userSP - 1) / 512)] * 512 + (userSP - 1) % 512] = 0;
+
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 9] = 0;
+SP = [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 13];
+
+ireturn;

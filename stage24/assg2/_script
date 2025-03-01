@@ -1,0 +1,29 @@
+load --module 0 ../stage24/assg2/module0.xsm
+load --module 1 ../stage24/assg2/module1.xsm
+load --module 2 ../stage24/assg2/module2.xsm
+load --module 3 ../stage24/assg2/module3.xsm
+load --module 4 ../stage24/assg2/module4.xsm
+load --module 5 ../stage24/assg2/module5.xsm
+load --module 7 ../stage24/assg2/module7.xsm
+load --exhandler ../stage24/assg2/exhandler.xsm
+load --int=timer ../stage24/assg2/timer.xsm
+load --int=disk ../stage24/assg2/disk.xsm
+load --int=console ../stage24/assg2/console.xsm
+load --int=4 ../stage24/assg2/int4.xsm
+load --int=5 ../stage24/assg2/int5.xsm
+load --int=6 ../stage24/assg2/int6.xsm
+load --int=7 ../stage24/assg2/int7.xsm
+load --int=8 ../stage24/assg2/int8.xsm
+load --int=9 ../stage24/assg2/int9.xsm
+load --int=10 ../stage24/assg2/int10.xsm
+load --int=11 ../stage24/assg2/int11.xsm
+load --int=13 ../stage24/assg2/int13.xsm
+load --int=14 ../stage24/assg2/int14.xsm
+load --int=15 ../stage24/assg2/int15.xsm
+load --data ../stage24/assg2/sample.dat
+load --data ../stage24/assg2/numbers.dat
+load --exec ../stage24/assg2/file.xsm
+load --exec ../stage24/assg2/shared.xsm
+load --init ../stage24/assg2/init.xsm
+load --idle ../stage24/assg2/idle.xsm
+load --os ../stage24/assg2/os.xsm

@@ -1,0 +1,82 @@
+alias userSP R1;
+userSP = SP;
+
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 13] = SP;
+SP = [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 11] * 512 - 1;
+
+[SYSTEM_STATUS_TABLE + 25] = [SYSTEM_STATUS_TABLE + 25] + 1; // Kernel Switches
+
+alias syscall R2;
+syscall = [[PTBR + 2 * (userSP - 5) / 512] * 512 + (userSP - 5) % 512];
+
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 9] = syscall;
+
+if (syscall == 17) then
+	// Semget
+	alias semid R3;
+	semid = -1;
+	
+	alias i R4;
+	i = 0;
+	
+	while (i < 8) do
+		if ([[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 11] * 512 + 496 + 2 * i] == -1) then
+			semid = i;
+			break;
+		endif;
+		i = i + 1;
+	endwhile;
+	
+	if(semid == -1) then
+		[[PTBR + 2 * (userSP - 1) / 512] * 512 + (userSP - 1) % 512] = -1;
+		[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 9] = 0;
+		SP = [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 13];
+		ireturn;
+	endif;
+
+	multipush(R1,R2,R3,R4);
+	R1 = 6;
+	R2 = [SYSTEM_STATUS_TABLE + 1];
+	call MOD_0;
+	multipop(R1,R2,R3,R4);
+
+	if(R0 == -1) then
+		[[PTBR + 2 * (userSP - 1) / 512] * 512 + (userSP - 1) % 512] = -2;
+		[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 9] = 0;
+		SP = [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 13];
+		ireturn;
+	endif;
+
+	[[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 11] * 512 + 496 + 2 * semid] = 1;
+	[[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 11] * 512 + 496 + 2 * semid + 1] = R0;
+	[[PTBR + 2 * (userSP - 1) / 512] * 512 + (userSP - 1) % 512] = semid;
+endif;
+
+if (syscall == 18) then
+	// Semrelease
+	alias semid R3;
+	semid = [[PTBR + 2 * (userSP - 4) / 512] * 512 + (userSP - 4) % 512];
+
+	if (semid < 0 || semid > 7 || [[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 11] * 512 + 496 + 2 * semid] != 1) then
+		[[PTBR + 2 * (userSP - 1) / 512] * 512 + (userSP - 1) % 512] = -1;
+		[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 9] = 0;
+		SP = [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 13];
+		ireturn;
+	endif;
+	
+	multipush(R1,R2,R3);
+	R1 = 7;
+	R2 = [SYSTEM_STATUS_TABLE + 1];
+	R3 = [[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 11] * 512 + 496 + 2 * semid + 1];
+	call MOD_0;
+	multipop(R1,R2,R3);
+
+	[[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 11] * 512 + 496 + 2 * semid] = -1;
+	[[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 11] * 512 + 496 + 2 * semid + 1] = -1;
+
+	[[PTBR + 2 * (userSP - 1) / 512] * 512 + (userSP - 1) % 512] = 0;
+endif;
+
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 9] = 0;
+SP = [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 13];
+ireturn;

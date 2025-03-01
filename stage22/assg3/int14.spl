@@ -1,0 +1,67 @@
+alias userSP R1;
+userSP = SP;
+
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 13] = SP;
+SP = [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 11] * 512 - 1;
+
+[SYSTEM_STATUS_TABLE + 25] = [SYSTEM_STATUS_TABLE + 25] + 1; // Kernel Switches
+
+alias syscall R2;
+syscall = [[PTBR + 2 * (userSP - 5) / 512] * 512 + (userSP - 5) % 512];
+
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 9] = syscall;
+
+alias semid R3; // of Per-Process Resource Table
+semid = [[PTBR + 2 * (userSP - 4) / 512] * 512 + (userSP - 4) % 512];
+
+if (semid < 0 || semid > 7 || [[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 11] * 512 + 496 + 2 * semid] != 1) then
+	[[PTBR + 2 * (userSP - 1) / 512] * 512 + (userSP - 1) % 512] = -1;
+	[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 9] = 0;
+	SP = [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 13];
+	ireturn;
+endif;
+
+alias id R3; // of SEMAPHORE_TABLE
+id = [[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 11] * 512 + 496 + 2 * id + 1];
+
+if (syscall == 19) then
+	// SemLock
+	while ([SEMAPHORE_TABLE + id * 4 + 0] != -1 && [SEMAPHORE_TABLE + id * 4 + 0] != [SYSTEM_STATUS_TABLE + 1]) do
+		[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 4] = WAIT_SEMAPHORE;
+		[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 5] = id;
+		multipush(R1,R2,R3);
+		call MOD_5;
+		multipop(R1,R2,R3);
+	endwhile;
+
+	[SEMAPHORE_TABLE + id * 4 + 0] = [SYSTEM_STATUS_TABLE + 1];
+endif;
+
+if (syscall == 20) then
+	// SemUnLock
+	if ([SEMAPHORE_TABLE + id * 4 + 0] != -1) then
+		if ([SEMAPHORE_TABLE + id * 4 + 0] != [SYSTEM_STATUS_TABLE + 1]) then
+			[[PTBR + 2 * (userSP - 1) / 512] * 512 + (userSP - 1) % 512] = -2;
+			[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 9] = 0;
+			SP = [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 13];
+			ireturn;
+		endif;
+
+		[SEMAPHORE_TABLE + id * 4 + 0] = -1;
+
+		alias i R4;
+		i = 0;
+		while (i < 16) do
+			if ([PROCESS_TABLE + i * 16 + 4] == WAIT_SEMAPHORE && [PROCESS_TABLE + i * 16 + 5] == id) then
+				[PROCESS_TABLE + i * 16 + 4] = READY;
+				[PROCESS_TABLE + i * 16 + 5] = -1;
+			endif;
+			i = i + 1;
+		endwhile;
+	endif;
+endif;
+
+[[PTBR + 2 * (userSP - 1) / 512] * 512 + (userSP - 1) % 512] = 0;
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 9] = 0;
+SP = [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 13];
+ireturn;

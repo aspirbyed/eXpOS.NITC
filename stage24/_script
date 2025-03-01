@@ -1,0 +1,27 @@
+load --module 0 ../stage24/module0.xsm
+load --module 1 ../stage24/module1.xsm
+load --module 2 ../stage24/module2.xsm
+load --module 3 ../stage24/module3.xsm
+load --module 4 ../stage24/module4.xsm
+load --module 5 ../stage24/module5.xsm
+load --module 7 ../stage24/module7.xsm
+load --exhandler ../stage24/exhandler.xsm
+load --int=timer ../stage24/timer.xsm
+load --int=disk ../stage24/disk.xsm
+load --int=console ../stage24/console.xsm
+load --int=4 ../stage24/int4.xsm
+load --int=5 ../stage24/int5.xsm
+load --int=6 ../stage24/int6.xsm
+load --int=7 ../stage24/int7.xsm
+load --int=8 ../stage24/int8.xsm
+load --int=9 ../stage24/int9.xsm
+load --int=10 ../stage24/int10.xsm
+load --int=11 ../stage24/int11.xsm
+load --int=13 ../stage24/int13.xsm
+load --int=14 ../stage24/int14.xsm
+load --int=15 ../stage24/int15.xsm
+load --data ../stage24/sample.dat
+load --exec ../stage24/file.xsm
+load --init ../stage24/init.xsm
+load --idle ../stage24/idle.xsm
+load --os ../stage24/os.xsm

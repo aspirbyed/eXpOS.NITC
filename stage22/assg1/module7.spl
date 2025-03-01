@@ -1,0 +1,181 @@
+// Init Code
+loadi(65, 7);
+loadi(66, 8);
+
+// Library Code
+loadi(63, 13);
+loadi(64, 14);
+
+// Inode + User Table
+loadi(59, 3);
+loadi(60, 4);
+
+// Disk Free List
+loadi(61, 2);
+
+// INT 0 : Exception Handler
+loadi(2, 15);
+loadi(3, 16);
+
+// INT 1 : Timer
+loadi(4, 17);
+loadi(5, 18);
+
+// INT 2 : Disk
+loadi(6, 19);
+loadi(7, 20);
+
+// INT 3 : Console
+loadi(8, 21);
+loadi(9, 22);
+
+// INT 6 : Read
+loadi(14, 27);
+loadi(15, 28);
+
+// INT 7 : Write
+loadi(16, 29);
+loadi(17, 30);
+
+// INT 8 : Fork
+loadi(18, 31);
+loadi(19, 32);
+
+// INT 9 : Exec
+loadi(20, 33);
+loadi(21, 34);
+
+// INT 10 : Exit
+loadi(22, 35);
+loadi(23, 36);
+
+// INT 11 : Wait/Signal, Getpid/Getppid
+loadi(24, 37);
+loadi(25, 38);
+
+// INT 13 : Semget, Semrelease
+loadi(28, 41);
+loadi(29, 42);
+
+// INT 14 : SemLock, SemUnLock
+loadi(30, 43);
+loadi(31, 44);
+
+// INT 15 : Shutdown
+loadi(32, 45);
+loadi(33, 46);
+
+// Module 0 : Resource Manager
+loadi(40, 53);
+loadi(41, 54);
+
+// Module 1: Process Manager
+loadi(42, 55);
+loadi(43, 56);
+
+// Module 2: Memory Manager
+loadi(44, 57);
+loadi(45, 58);
+
+// Module 4 : Device Manager
+loadi(48, 61);
+loadi(49, 62);
+
+// Module 5 : Context Switch (Scheduler)
+loadi(50, 63);
+loadi(51, 64);
+
+// For INIT
+PTBR = PAGE_TABLE_BASE + 20;
+PTLR = 10;
+
+// Initialize the page table for INIT program
+// library
+[PTBR + 0] = 63;
+[PTBR + 1] = "0100";
+[PTBR + 2] = 64;
+[PTBR + 3] = "0100";
+
+// Heap
+[PTBR + 4] = 78;
+[PTBR + 5] = "0110";
+[PTBR + 6] = 79;
+[PTBR + 7] = "0110";
+
+// code
+[PTBR + 8] = 65;
+[PTBR + 9] = "0100";
+[PTBR + 10] = 66;
+[PTBR + 11] = "0100";
+[PTBR + 12] = -1;
+[PTBR + 13] = "0000";
+[PTBR + 14] = -1;
+[PTBR + 15] = "0000";
+
+// Stack
+[PTBR + 16] = 76;
+[PTBR + 17] = "0110";
+[PTBR + 18] = 77;
+[PTBR + 19] = "0110";
+
+// setting up process table for INIT
+[PROCESS_TABLE + 16 + 1] = 1;
+[PROCESS_TABLE + 16 + 4] = CREATED;
+[PROCESS_TABLE + 16 + 11] = 80;
+[PROCESS_TABLE + 16 + 13] = 8 * 512;
+[PROCESS_TABLE + 16 + 12] = 0;
+[PROCESS_TABLE + 16 + 14] = PAGE_TABLE_BASE + 20;
+[PROCESS_TABLE + 16 + 15] = 10;
+
+[76 * 512] = [65 * 512 + 1];
+
+// Process Table STATUS Initialisation
+alias i R0;
+i = 2;
+while (i < 16) do
+    [PROCESS_TABLE + i * 16 + 4] = TERMINATED;
+    i = i + 1;
+endwhile;
+
+// Semaphore Table Initialisation
+i = 0;
+while (i < MAX_SEM_COUNT) do
+        [SEMAPHORE_TABLE + i * 4 + 0] = -1;
+        [SEMAPHORE_TABLE + i * 4 + 1] = 0;
+        i = i + 1;
+endwhile;
+
+// Per-Process Resource table for init
+i = 1;
+while (i < 9) do
+    [([PROCESS_TABLE + 16 + 11] + 1) * 512 - 2 * i] = -1;
+    i = i + 1;
+endwhile;
+
+// Memort Free List Initialisation
+i = 0;
+while (i < 83) do
+        [MEMORY_FREE_LIST + i] = 1;
+        i = i + 1;
+endwhile;
+while (i < 128) do
+        [MEMORY_FREE_LIST + i] = 0;
+        i = i + 1;
+endwhile;
+
+[DISK_STATUS_TABLE + 0] = 0; // Disk Status Table Initialisation
+[TERMINAL_STATUS_TABLE + 0] = 0; // Terminal Status Table Initialisation
+[SYSTEM_STATUS_TABLE + 3] = 0; // WAIT_MEM_COUNT
+[SYSTEM_STATUS_TABLE + 2] = 45; // MEM_FREE_COUNT
+
+// Disk Map Table
+[DISK_MAP_TABLE + 10 + 2] = -1;
+[DISK_MAP_TABLE + 10 + 3] = -1;
+[DISK_MAP_TABLE + 10 + 4] = 7;
+[DISK_MAP_TABLE + 10 + 5] = 8;
+[DISK_MAP_TABLE + 10 + 6] = -1;
+[DISK_MAP_TABLE + 10 + 7] = -1;
+[DISK_MAP_TABLE + 10 + 8] = -1;
+[DISK_MAP_TABLE + 10 + 9] = -1;
+
+return;

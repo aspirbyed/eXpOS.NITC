@@ -1,0 +1,12 @@
+int main() {
+    decl
+        int temp;
+        str file;
+    enddecl
+    begin
+        temp = exposcall("Write", -2, "File Name:");
+        temp = exposcall("Read", -1, file);
+        temp = exposcall("Delete", file);
+        return 0;
+    end
+}

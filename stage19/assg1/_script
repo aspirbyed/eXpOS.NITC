@@ -1,0 +1,19 @@
+load --module 0 ../stage19/assg1/module0.xsm
+load --module 1 ../stage19/assg1/module1.xsm
+load --module 2 ../stage19/assg1/module2.xsm
+load --module 4 ../stage19/assg1/module4.xsm
+load --module 5 ../stage19/assg1/module5.xsm
+load --module 7 ../stage19/assg1/module7.xsm
+load --int=6 ../stage19/assg1/int6.xsm
+load --int=7 ../stage19/assg1/int7.xsm
+load --int=9 ../stage19/assg1/int9.xsm
+load --int=10 ../stage19/assg1/int10.xsm
+load --exhandler ../stage19/assg1/exhandler.xsm
+load --int=timer ../stage19/assg1/timer.xsm
+load --int=disk ../stage19/assg1/disk.xsm
+load --int=console ../stage19/assg1/console.xsm
+load --exec ../stage19/assg1/exec.xsm
+load --exec ../stage19/assg1/odd.xsm
+load --init ../stage19/assg1/init.xsm
+load --idle ../stage19/assg1/idle.xsm
+load --os ../stage19/assg1/os.xsm

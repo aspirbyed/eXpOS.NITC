@@ -1,0 +1,12 @@
+load --init ../stage16/assg1/init.xsm
+load --module 0 ../stage16/assg1/module0.xsm
+load --module 4 ../stage16/assg1/module4.xsm
+load --module 5 ../stage16/assg1/module5.xsm
+load --module 7 ../stage16/assg1/module7.xsm
+load --int=7 ../stage16/assg1/int7.xsm
+load --int=6 ../stage16/assg1/int6.xsm
+load --int=10 ../stage16/assg1/int10.xsm
+load --int=timer ../stage16/assg1/timer.xsm
+load --int=console ../stage16/assg1/console.xsm
+load --idle ../stage16/assg1/idle.xsm
+load --os ../stage16/assg1/os.xsm

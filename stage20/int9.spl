@@ -1,0 +1,118 @@
+alias userSP R5;
+userSP = SP;
+
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 13] = SP;
+SP = [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 11] * 512 - 1;
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 9] = 9;
+
+alias fileName R6;
+fileName = [[PTBR + 2 * ((userSP - 4) / 512)] * 512 + (userSP - 4) % 512];
+
+alias inodeEntry R7;
+alias found R8;
+found = 0;
+inodeEntry = 0;
+
+while(inodeEntry < MAX_FILE_NUM) do
+    if ([INODE_TABLE + inodeEntry * 16 + 1] == fileName && [INODE_TABLE + inodeEntry * 16] == EXEC) then
+        found = 1;
+        break;
+    endif;
+    inodeEntry = inodeEntry + 1;
+endwhile;
+
+if (found == 0) then
+    SP = userSP;
+    [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 9] = 0;
+    [[PTBR + 2 * ((userSP - 1) / 512)] * 512 + (userSP - 1) % 512] = -1;
+    ireturn;
+endif;
+
+multipush(R5,R6,R7);
+R1 = 3;
+R2 = [SYSTEM_STATUS_TABLE + 1];
+call MOD_1;
+multipop(R5,R6,R7);
+
+alias userAreaPAgeNumber R8;
+userAreaPAgeNumber = [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 11];
+
+[MEMORY_FREE_LIST + userAreaPAgeNumber] = [MEMORY_FREE_LIST + userAreaPAgeNumber] + 1;
+
+[SYSTEM_STATUS_TABLE + 2] = [SYSTEM_STATUS_TABLE + 2] - 1;
+
+SP = userAreaPAgeNumber * 512 - 1;
+
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 4] = RUNNING;
+
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 7] = inodeEntry;
+
+// Library
+[PTBR + 0] = 63;
+[PTBR + 1] = "0100";
+[PTBR + 2] = 64;
+[PTBR + 3] = "0100";
+
+multipush(R5,R6,R7,R8);
+
+// Heap
+[PTBR + 4] = -1;
+[PTBR + 5] = "0000";
+[PTBR + 6] = -1;
+[PTBR + 7] = "0000";
+
+// Stack
+R1 = 1;
+call MOD_2;
+[PTBR + 16] = R0;
+[PTBR + 17] = "0110";
+
+R1 = 1;
+call MOD_2;
+[PTBR + 18] = R0;
+[PTBR + 19] = "0110";
+
+multipop(R5,R6,R7,R8);
+
+// Code
+multipush(R5,R6,R7,R8);
+R1 = 5;
+R2 = [INODE_TABLE + inodeEntry * 16 + 8];
+call MOD_2;
+[PTBR + 8] = R0;
+[PTBR + 9] = "0100"; 
+multipop(R5,R6,R7,R8);
+
+alias i R8;
+i = 1;
+while (i < 4) do
+    [PTBR + 8 + 2 * i] = -1;
+    [PTBR + 9 + 2 * i] = "0000";
+    i = i + 1;
+endwhile;
+
+// Disk Map Table
+i = 2;
+while(i < 10) do
+    if (i >=4 && i<=7 && [INODE_TABLE + inodeEntry * 16 + 8 + (i - 4)] != -1) then
+	[DISK_MAP_TABLE + [SYSTEM_STATUS_TABLE + 1] * 10 + i] = [INODE_TABLE + inodeEntry * 16 + 8 + (i - 4)];
+    else 
+	[DISK_MAP_TABLE + [SYSTEM_STATUS_TABLE + 1] * 10 + i] = -1;
+    endif;
+    i = i + 1;
+endwhile;
+
+// per-process resource table initialization
+i = 1;
+while (i < 9) do
+    [([PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 11] + 1) * 512 - 2 * i] = -1;
+    i = i + 1;
+endwhile;
+
+[[PTBR + 16] * 512] = [[PTBR + 8] * 512 + 1];
+
+SP = 8 * 512;
+
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 9] = 0;
+
+ireturn;

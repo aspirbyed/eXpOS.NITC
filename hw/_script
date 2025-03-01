@@ -1,0 +1,25 @@
+load --module 0 ../hw/module0.xsm
+load --module 1 ../hw/module1.xsm
+load --module 2 ../hw/module2.xsm
+load --module 4 ../hw/module4.xsm
+load --module 5 ../hw/module5.xsm
+load --module 7 ../hw/module7.xsm
+load --int=6 ../hw/int6.xsm
+load --int=7 ../hw/int7.xsm
+load --int=8 ../hw/int8.xsm
+load --int=9 ../hw/int9.xsm
+load --int=10 ../hw/int10.xsm
+load --int=11 ../hw/int11.xsm
+load --int=15 ../hw/int15.xsm
+load --exhandler ../hw/exhandler.xsm
+load --int=timer ../hw/timer.xsm
+load --int=disk ../hw/disk.xsm
+load --int=console ../hw/console.xsm
+load --exec ../hw/p1.xsm
+load --exec ../hw/p2.xsm
+load --exec ../hw/p3.xsm
+load --exec ../hw/p4.xsm
+load --exec ../hw/even.xsm
+load --init ../hw/init1.xsm
+load --idle ../hw/idle.xsm
+load --os ../hw/os.xsm

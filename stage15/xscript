@@ -1,0 +1,11 @@
+load --init ../stage15/init.xsm
+load --exec ../stage15/exec.xsm
+load --module 0 ../stage15/module0.xsm
+load --module 4 ../stage15/module4.xsm
+load --module 5 ../stage15/module5.xsm
+load --module 7 ../stage15/module7.xsm
+load --int=7 ../stage15/int7.xsm
+load --int=10 ../stage15/int10.xsm
+load --int=timer ../stage15/timer.xsm
+load --idle ../stage15/idle.xsm
+load --os ../stage15/os_startup.xsm

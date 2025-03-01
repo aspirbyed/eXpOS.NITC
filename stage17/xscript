@@ -1,0 +1,16 @@
+load --module 0 ../stage17/module0.xsm
+load --module 1 ../stage17/module1.xsm
+load --module 2 ../stage17/module2.xsm
+load --module 4 ../stage17/module4.xsm
+load --module 5 ../stage17/module5.xsm
+load --module 7 ../stage17/module7.xsm
+load --int=6 ../stage17/int6.xsm
+load --int=7 ../stage17/int7.xsm
+load --int=9 ../stage17/int9.xsm
+load --int=10 ../stage17/int10.xsm
+load --int=timer ../stage17/timer.xsm
+load --int=console ../stage17/console.xsm
+load --exec ../stage17/odd.xsm
+load --init ../stage17/init.xsm
+load --idle ../stage17/idle.xsm
+load --os ../stage17/os.xsm

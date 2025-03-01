@@ -1,0 +1,23 @@
+load --module 0 ../stage21/assg2/module0.xsm
+load --module 1 ../stage21/assg2/module1.xsm
+load --module 2 ../stage21/assg2/module2.xsm
+load --module 4 ../stage21/assg2/module4.xsm
+load --module 5 ../stage21/assg2/module5.xsm
+load --module 7 ../stage21/assg2/module7.xsm
+load --int=6 ../stage21/assg2/int6.xsm
+load --int=7 ../stage21/assg2/int7.xsm
+load --int=8 ../stage21/assg2/int8.xsm
+load --int=9 ../stage21/assg2/int9.xsm
+load --int=10 ../stage21/assg2/int10.xsm
+load --int=11 ../stage21/assg2/int11.xsm
+load --int=15 ../stage21/assg2/int15.xsm
+load --exhandler ../stage21/assg2/exhandler.xsm
+load --int=timer ../stage21/assg2/timer.xsm
+load --int=disk ../stage21/assg2/disk.xsm
+load --int=console ../stage21/assg2/console.xsm
+load --exec ../stage21/assg2/pid.xsm
+load --exec ../stage21/assg2/exec.xsm
+load --exec ../stage21/assg2/odd.xsm
+load --init ../stage21/assg2/init.xsm
+load --idle ../stage21/assg2/idle.xsm
+load --os ../stage21/assg2/os.xsm

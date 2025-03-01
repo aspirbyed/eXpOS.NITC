@@ -1,0 +1,115 @@
+alias userSP R0;
+userSP = SP;
+
+alias pid R2;
+pid = [SYSTEM_STATUS_TABLE + 1];
+
+[PROCESS_TABLE + pid * 16 + 13] = SP;
+SP = [PROCESS_TABLE + pid * 16 + 11] * 512 - 1;
+[PROCESS_TABLE + pid * 16 + 9] = 9;
+
+alias fileName R1;
+fileName = [[PTBR + 2 * ((userSP - 4) / 512)] * 512 + (userSP - 4) % 512];
+
+alias i R3; // Inode index
+i = 0;
+
+print MAX_FILE_NUM;
+
+while (i < MAX_FILE_NUM) do
+	if (fileName == [INODE_TABLE + i * 16 + 1]) then
+		if ([INODE_TABLE + i * 16] != 3) then
+			i = -1;
+		endif;
+		break;
+	endif;
+	i = i + 1;
+endwhile;
+
+if (i == -1 || i >= 16)then
+	[PROCESS_TABLE + pid * 16 + 9] = 0;
+	SP = userSP;	
+	[[PTBR + 2 * ((userSP - 1) / 512)] * 512 + (userSP - 1) % 512] = -1;
+	ireturn;
+endif;
+
+multipush(R0,R1,R2,R3);
+R1 = 3;
+R2 = pid;
+call MOD_1;
+multipop(R0,R1,R2,R3);
+
+alias UAPN R4;
+UAPN = [PROCESS_TABLE + pid * 16 + 11];
+
+[MEMORY_FREE_LIST + UAPN] = [MEMORY_FREE_LIST + UAPN] + 1;
+
+[SYSTEM_STATUS_TABLE + 2] = [SYSTEM_STATUS_TABLE + 2] - 1;
+
+SP = UAPN * 512 - 1;
+
+[PROCESS_TABLE + pid * 16 + 4] = RUNNING;
+
+[PROCESS_TABLE + pid * 16 + 7] = i;
+
+[PTBR + 0] = 63;
+[PTBR + 1] = "0100";
+[PTBR + 2] = 64;
+[PTBR + 3] = "0100";
+
+// Stack
+multipush(R0,R1,R2,R3,R4);
+R1 = 1;
+call MOD_2;
+[PTBR + 16] = R0;
+[PTBR + 17] = "0110";
+multipop(R0,R1,R2,R3,R4);
+
+multipush(R0,R1,R2,R3,R4);
+R1 = 1;
+call MOD_2;
+[PTBR + 18] = R0;
+[PTBR + 19] = "0110";
+multipop(R0,R1,R2,R3,R4);
+
+// Heap
+multipush(R0,R1,R2,R3,R4);
+R1 = 1;
+call MOD_2;
+[PTBR + 4] = R0;
+[PTBR + 5] = "0110";
+multipop(R0,R1,R2,R3,R4);
+
+multipush(R0,R1,R2,R3,R4);
+R1 = 1;
+call MOD_2;
+[PTBR + 6] = R0;
+[PTBR + 7] = "0110";
+multipop(R0,R1,R2,R3,R4);
+
+// Code
+alias j R4;
+j = 0;
+while (j < 4) do
+	if ([INODE_TABLE + i * 16 + 8 + j] != -1) then
+		multipush(R0,R1,R2,R3,R4);
+		R1 = 1;
+		call MOD_2;
+		[PTBR + 8 + 2 * j] = R0;
+		[PTBR + 9 + 2 * j] = "0100";
+		loadi(R0, [INODE_TABLE + i * 16 + 8 + j]);
+		multipop(R0,R1,R2,R3,R4);
+	else
+		[PTBR + 8 + 2 * j] = -1;
+        [PTBR + 9 + 2 * j] = "0000";
+	endif;
+	j = j + 1;
+endwhile;
+
+[[PTBR + 16] * 512] = [[PTBR + 8] * 512 + 1];
+
+SP = 8 * 512;
+
+[PROCESS_TABLE + pid * 16 + 9] = 0;
+
+ireturn;

@@ -1,0 +1,32 @@
+alias functionNum R1;
+alias currentPID R2;
+alias word R3;
+
+if (functionNum == 3) then
+    //Calling acquire terminal
+    multipush(R1, R2, R3);
+    
+    functionNum = 8;
+    currentPID = [SYSTEM_STATUS_TABLE + 1];
+    
+    call MOD_0;
+    
+    multipop(R1, R2, R3);
+    
+    print word;
+
+    //Calling releasing terminal
+    multipush(R1, R2, R3);
+    
+    functionNum = 9;
+    currentPID = [SYSTEM_STATUS_TABLE + 1];
+    
+    call MOD_0;
+    
+    //Register R0 will contain the return value from MOD_0
+    //Move it to some other register if needed;
+    multipop(R1, R2, R3);
+    
+    return;
+endif;
+return;
