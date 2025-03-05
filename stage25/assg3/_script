@@ -1,0 +1,35 @@
+load --module 0 ../stage25/assg3/module0.xsm
+load --module 1 ../stage25/assg3/module1.xsm
+load --module 2 ../stage25/assg3/module2.xsm
+load --module 3 ../stage25/assg3/module3.xsm
+load --module 4 ../stage25/assg3/module4.xsm
+load --module 5 ../stage25/assg3/module5.xsm
+load --module 7 ../stage25/assg3/module7.xsm
+load --exhandler ../stage25/assg3/exhandler.xsm
+load --int=timer ../stage25/assg3/timer.xsm
+load --int=disk ../stage25/assg3/disk.xsm
+load --int=console ../stage25/assg3/console.xsm
+load --int=4 ../stage25/assg3/int4.xsm
+load --int=5 ../stage25/assg3/int5.xsm
+load --int=6 ../stage25/assg3/int6.xsm
+load --int=7 ../stage25/assg3/int7.xsm
+load --int=8 ../stage25/assg3/int8.xsm
+load --int=9 ../stage25/assg3/int9.xsm
+load --int=10 ../stage25/assg3/int10.xsm
+load --int=11 ../stage25/assg3/int11.xsm
+load --int=13 ../stage25/assg3/int13.xsm
+load --int=14 ../stage25/assg3/int14.xsm
+load --int=15 ../stage25/assg3/int15.xsm
+load --data ../stage25/assg3/sample.dat
+load --data ../stage25/assg3/numbers.dat
+load --data ../stage25/assg3/copy.dat
+load --exec ../stage25/assg3/ls.xsm
+load --exec ../stage25/assg3/cat.xsm
+load --exec ../stage25/assg3/rm.xsm
+load --exec ../stage25/assg3/cp.xsm
+load --exec ../stage25/assg3/assg1.xsm
+load --exec ../stage25/assg3/assg2.xsm
+load --exec ../stage25/assg3/assg3.xsm
+load --init ../stage25/assg3/init.xsm
+load --idle ../stage25/assg3/idle.xsm
+load --os ../stage25/assg3/os.xsm

@@ -1,0 +1,48 @@
+int main(){
+decl
+        int t, fd1, fd2;
+        str fileName1, fileName2, data;
+enddecl
+begin
+        t = exposcall("Read",-1,fileName1);
+        fd1 = exposcall("Open",fileName1);
+        if (fd1 == -1) then
+                t = exposcall("Write",-2,"FileNotFound");
+        else if (fd1 == -2) then
+                t = exposcall("Write",-2,"OpenFileLimit");
+        else if (fd1 == -3) then
+                t = exposcall("Write",-2,"ResourceLimit");
+        else
+                t = exposcall("Seek",fd1,0);
+                t = exposcall("Read",-1,fileName2);
+                fd2 = exposcall("Open",fileName2);
+                if (fd2 == -1) then
+                        t = exposcall("Write",-2,"FileNotFound");
+                else if (fd2 == -2) then
+                        t = exposcall("Write",-2,"OpenFileLimit");
+                else if (fd2 == -3) then
+                        t = exposcall("Write",-2,"ResourceLimit");
+                else
+                        t = exposcall("Seek",fd2,0);
+                        while (1 == 1) do
+                                t = exposcall("Read",fd1,data);
+                                if (t == -2) then
+                                        t = exposcall("Write",-2,"EOF");
+                                        break;
+                                endif;
+                                t = exposcall("Write",fd2,data);
+                        endwhile;
+
+                        t = exposcall("Close",fd2);
+                endif;
+                endif;
+                endif;
+
+                t = exposcall("Close",fd1);
+        endif;
+        endif;
+        endif;
+
+        return 0;
+end
+}

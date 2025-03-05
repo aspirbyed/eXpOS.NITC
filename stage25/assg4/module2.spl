@@ -1,0 +1,119 @@
+// Memory Manager Module
+alias funNum R1;
+
+if (funNum == 1) then
+	// Get Free Page
+	[SYSTEM_STATUS_TABLE + 3] = [SYSTEM_STATUS_TABLE + 3] + 1; // WAIT_MEM_COUNT
+	
+	while ([SYSTEM_STATUS_TABLE + 2] == 0) do // MEM_FREE_COUNT
+		[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 4] = WAIT_MEM;
+		multipush(R1);
+		call MOD_5;
+		multipop(R1);
+	endwhile;
+	
+	[SYSTEM_STATUS_TABLE + 3] = [SYSTEM_STATUS_TABLE + 3] - 1; // WAIT_MEM_COUNT
+
+	[SYSTEM_STATUS_TABLE + 2] = [SYSTEM_STATUS_TABLE + 2] - 1; // MEM_FREE_COUNT
+
+	alias pageNum R0; // page number
+	
+	pageNum = 76;
+	while (pageNum < 128) do
+		if ([MEMORY_FREE_LIST + pageNum] == 0) then
+			break;
+		endif;
+		pageNum = pageNum + 1;
+	endwhile;
+
+	[MEMORY_FREE_LIST + pageNum] = 1;
+
+	return;
+endif; 
+
+if (funNum == 2) then
+	// Release Page
+
+	alias pageNum R2;
+	[MEMORY_FREE_LIST + pageNum] = [MEMORY_FREE_LIST + pageNum] - 1;
+	
+	if ([MEMORY_FREE_LIST + pageNum] == 0) then
+		[SYSTEM_STATUS_TABLE + 2] = [SYSTEM_STATUS_TABLE + 2] + 1;
+	endif;
+
+	alias pid R3;
+	pid = 1;
+	while (pid < 16) do
+		if ([PROCESS_TABLE + pid * 16 + 4] == WAIT_MEM) then
+			[PROCESS_TABLE + pid * 16 + 4] = READY;
+		endif;
+		pid = pid + 1;
+	endwhile;
+
+	return;
+endif; 
+
+if (funNum == 3) then
+        // Get Free Block
+        alias i R2;
+        i = DISK_FREE_AREA;
+        while (i < DISK_SWAP_AREA) do
+                if ([DISK_FREE_LIST + i] == 0) then
+                        [DISK_FREE_LIST + i] = 1;
+                        R0 = i;
+                        return;
+                endif;
+		i = i + 1;
+        endwhile;
+        R0 = -1;
+        return;
+endif;
+
+if (funNum == 4) then
+	// Release block
+	alias blockNum R2;
+	[DISK_FREE_LIST + blockNum] = [DISK_FREE_LIST + blockNum] - 1;
+	return;
+endif;
+
+if (funNum == 5) then
+	// Get Code Page
+	alias blockNum R2;
+	alias i R3;
+	alias j R4;
+	alias pageNum R5;
+	
+	i = 0;
+	while (i < 16) do
+		j = 4;
+		while (j < 8) do
+			if ([DISK_MAP_TABLE + 10 * i + j] == blockNum) then
+				pageNum = [PAGE_TABLE_BASE + 20 * i + 8 + 2 * (j - 4)];
+				if (pageNum != -1) then
+					[MEMORY_FREE_LIST + pageNum] = [MEMORY_FREE_LIST + pageNum] + 1;
+                    			R0 = pageNum;
+                    			return;
+				endif;
+			endif;
+			j = j + 1;
+		endwhile;
+		i = i + 1;
+	endwhile;
+
+	multipush(R1,R2,R3,R4);
+	R1 = 1;
+	call MOD_2;
+	pageNum = R0;
+	multipop(R1,R2,R3,R4);
+
+	multipush(R0,R1,R2,R3,R4,R5);
+	R1 = 2;
+	R4 = blockNum;
+	R3 = pageNum;
+	R2 = [SYSTEM_STATUS_TABLE + 1];
+	call MOD_4;
+	multipop(R0,R1,R2,R3,R4,R5);
+	
+	R0 = pageNum;
+	return;
+endif;

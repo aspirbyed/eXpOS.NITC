@@ -1,0 +1,47 @@
+int main()
+{
+decl
+        int t, fd, permision, a, i;
+        str fileName, data;
+enddecl
+begin
+        t = exposcall("Read",-1,fileName);
+        t = exposcall("Read",-1,permision);
+        t = exposcall("Create",fileName,permision);
+
+        fd = exposcall("Open",fileName);
+        if (fd == -1) then
+                t = exposcall("Write",-2,"FileNotFound");
+        else if (fd == -2) then
+                t = exposcall("Write",-2,"OpenFileLimit");
+        else if (fd == -3) then
+                t = exposcall("Write",-2,"ResourceLimit");
+        else 
+                i = 1;
+                while (i <= 1100) do
+                        t = exposcall("Write",fd,i);
+                        i = i + 1;
+                endwhile;
+        endif;
+        endif;
+        endif;
+
+        while (a != -2) do
+                a = exposcall("Seek",fd,-1);
+                if (a == -2) then
+                        break;
+                endif;
+                t = exposcall("Read",fd,data);
+                if (t == -2) then
+                        t = exposcall("Write",-2,"EOF");
+                        break;
+                endif;
+                t = exposcall("Write", -2, data);
+                a = exposcall("Seek",fd,-1);
+        endwhile;
+
+        t = exposcall("Close",fd);
+        
+        return 0;
+end
+}
