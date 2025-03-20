@@ -77,13 +77,14 @@ if (syscall == 4) then
         inodeEntry = INODE_TABLE + inodeIndex * 16;
         if (inodeIndex == -1) then
                 [returnAddress] = 0; // File Not Found / Success
-		//print "FILENOTFOUND";
         else if ([inodeEntry + 0] != DATA) then
                 [returnAddress] = -1; // Permission denied, Not valid entry
-		//print "INVALIDENTRY";
+		print "Bruh";
         else if ([inodeEntry + 4] == EXCLUSIVE && [SYSTEM_STATUS_TABLE + 0] != 1 && [inodeEntry + 3] != [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 3]) then
                 [returnAddress] = -1; // Permission denied, Not valid entry
-		//print "PERMISSIONDENIED";
+		print [SYSTEM_STATUS_TABLE + 0];
+		print [inodeEntry + 3];
+		print [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 3];
         else
                 multipush(R1,R2,R3,R4,R6,R7,R8,R9);
                 R1 = 4;
@@ -120,7 +121,8 @@ if (syscall == 4) then
                                         R2 = [blockNum];
                                         R3 = [SYSTEM_STATUS_TABLE + 1];
                                         call MOD_2;
-                                        multipop(R1,R2,R3,R6,R4,R7,R8,R9);
+
+                                        multipop(R1,R2,R3,R4,R6,R7,R8,R9);
                                 endif;
                                 blockNum = blockNum + 1;
                                 i = i + 1;

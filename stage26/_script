@@ -1,0 +1,40 @@
+load --library ../expl/library.lib
+load --module 0 ../stage26/module0.xsm
+load --module 1 ../stage26/module1.xsm
+load --module 2 ../stage26/module2.xsm
+load --module 3 ../stage26/module3.xsm
+load --module 4 ../stage26/module4.xsm
+load --module 5 ../stage26/module5.xsm
+load --module 7 ../stage26/module7.xsm
+load --exhandler ../stage26/exhandler.xsm
+load --int=timer ../stage26/timer.xsm
+load --int=disk ../stage26/disk.xsm
+load --int=console ../stage26/console.xsm
+load --int=4 ../stage26/int4.xsm
+load --int=5 ../stage26/int5.xsm
+load --int=6 ../stage26/int6.xsm
+load --int=7 ../stage26/int7.xsm
+load --int=8 ../stage26/int8.xsm
+load --int=9 ../stage26/int9.xsm
+load --int=10 ../stage26/int10.xsm
+load --int=11 ../stage26/int11.xsm
+load --int=12 ../stage26/int12.xsm
+load --int=13 ../stage26/int13.xsm
+load --int=14 ../stage26/int14.xsm
+load --int=15 ../stage26/int15.xsm
+load --int=16 ../stage26/int16.xsm
+load --int=17 ../stage26/int17.xsm
+load --data ../stage26/sample.dat
+load --data ../stage26/numbers.dat
+load --data ../stage26/copy.dat
+load --exec ../stage26/ls.xsm
+load --exec ../stage26/cat.xsm
+load --exec ../stage26/rm.xsm
+load --exec ../stage26/cp.xsm
+load --exec ../stage26/lu.xsm
+load --exec ../stage26/ru.xsm
+load --exec ../stage26/create.xsm
+load --shell ../stage26/shell.xsm
+load --init ../stage26/init.xsm
+load --idle ../stage26/idle.xsm
+load --os ../stage26/os.xsm

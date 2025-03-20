@@ -1,0 +1,152 @@
+alias userSP R1;
+userSP = SP;
+
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 13] = SP;
+SP = [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 11] * 512 - 1;
+
+alias syscall R2;
+syscall = [[PTBR + 2 * (userSP - 5) / 512] * 512 + (userSP - 5) % 512];
+
+alias returnAddress R3;
+returnAddress = [PTBR + 2 * (userSP - 1) / 512] * 512 + (userSP - 1) % 512;
+
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 9] = syscall;
+
+if (syscall == 2) then
+        // Open
+        alias fileName R4;
+        fileName = [[PTBR + 2 * ((userSP - 4) / 512)] * 512 + (userSP - 4) % 512];
+
+        alias UAPN R5;
+        UAPN = [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 11];
+        
+        alias index R6;
+        index = -1;
+        
+        alias i R7;
+        i = 0;
+        while (i < 8) do
+                if ([UAPN * 512 + RESOURCE_TABLE_OFFSET + 2 * i] == -1) then
+                        index = i;
+                        break;
+                endif;
+                i = i + 1;
+        endwhile;
+
+        if (index == -1) then
+                [returnAddress] = -3;
+        else
+                multipush(R1,R2,R3,R4,R5,R6,R7);
+                R1 = 3;
+                R2 = fileName;
+                call MOD_3;
+                multipop(R1,R2,R3,R4,R5,R6,R7);
+
+                alias fileIndex R0;
+
+                if (fileIndex == -1 || fileIndex == -2) then
+                        [returnAddress] = fileIndex;
+                else
+                        [UAPN * 512 + RESOURCE_TABLE_OFFSET + 2 * index + 0] = FILE;
+                        [UAPN * 512 + RESOURCE_TABLE_OFFSET + 2 * index + 1] = fileIndex;
+                        [returnAddress] = index;
+                endif;
+        endif;
+endif;
+
+if (syscall == 3) then
+        // Close
+        alias index R4;
+        index = [[PTBR + 2 * ((userSP - 4) / 512)] * 512 + (userSP - 4) % 512];
+
+        alias UAPN R5;
+        UAPN = [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 11];
+
+        if (index < 0 || index > 7 || [UAPN * 512 + RESOURCE_TABLE_OFFSET + 2 * index] != FILE) then
+                [returnAddress] = -1;
+        else
+                alias fileIndex R6;
+                fileIndex = [UAPN * 512 + RESOURCE_TABLE_OFFSET + 2 * index + 1];
+
+                multipush(R1,R2,R3,R4,R5,R6);
+                R1 = 4;
+                R2 = fileIndex;
+                call MOD_3;
+                multipop(R1,R2,R3,R4,R5,R6);
+
+                [UAPN * 512 + RESOURCE_TABLE_OFFSET + 2 * index + 0] = -1;
+                [UAPN * 512 + RESOURCE_TABLE_OFFSET + 2 * index + 1] = -1;
+
+                [returnAddress] = 0;
+        endif;
+endif;
+
+if (syscall == 6) then
+        // Seek
+        alias index R4;
+        index = [[PTBR + 2 * ((userSP - 4) / 512)] * 512 + (userSP - 4) % 512];
+
+        alias offset R5;
+        offset = [[PTBR + 2 * ((userSP - 3) / 512)] * 512 + (userSP - 3) % 512];
+
+        alias UAPN R6;
+        UAPN = [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 11];
+
+        if (index < 0 || index > 7 || [UAPN * 512 + RESOURCE_TABLE_OFFSET + 2 * index] != FILE) then
+                [returnAddress] = -1;
+        else
+                alias fileIndex R6;
+                fileIndex = [UAPN * 512 + RESOURCE_TABLE_OFFSET + 2 * index + 1];
+
+                alias inodeIndex R7;
+                inodeIndex = [OPEN_FILE_TABLE + fileIndex * 4];
+
+                multipush(R1,R2,R3,R4,R5,R6,R7);
+                R1 = 4; // Acquire Inode
+                R2 = inodeIndex;
+                R3 = [SYSTEM_STATUS_TABLE + 1];
+                call MOD_0;
+                multipop(R1,R2,R3,R4,R5,R6,R7);
+
+                if (R0 != -1) then
+                        alias lseek R8;
+                        lseek = OPEN_FILE_TABLE + fileIndex * 4 + 2;
+
+                        alias fileSize R9;
+
+                        if (inodeIndex == INODE_ROOT) then
+                                fileSize = 480;
+                        else
+                                fileSize = [INODE_TABLE + inodeIndex * 16 + 1];
+                        endif;
+
+                        if ([lseek] + offset < 0) then
+                                [returnAddress] = -2;
+                        else
+                                if (offset == 0) then
+                                        [lseek] = 0;
+                                else if ([lseek] + offset > fileSize) then
+                                        [lseek] = fileSize;
+                                else
+                                        [lseek] = [lseek] + offset;
+                                endif;
+                                endif;
+
+                                [returnAddress] = 0;
+                        endif;
+
+                        multipush(R1,R2,R3,R4,R5,R6,R7,R8,R9);
+                        R1 = 5; // Release Inode
+                        R2 = inodeIndex;
+                        R3 = [SYSTEM_STATUS_TABLE + 1];
+                        call MOD_0;
+                        multipop(R1,R2,R3,R4,R5,R6,R7,R8,R9);
+                else
+                        [returnAddress] = -1;
+                endif;
+        endif;
+endif;
+
+SP = userSP;
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 9] = 0;
+ireturn;

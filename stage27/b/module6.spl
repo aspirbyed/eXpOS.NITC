@@ -1,0 +1,189 @@
+alias funNum R1;
+//print "MOD6";
+
+if (funNum == SWAP_OUT) then
+        // SWAP_OUT
+        alias waitProcessPID R3;
+        waitProcessPID = -1;
+        
+        alias waitSemaphorePID R4;
+        waitSemaphorePID = -1;
+
+        alias highTickPID R5;
+        highTickPID = -1;
+
+        alias processTable R7;
+
+        alias i R6;
+        i = 3;
+        while (i < MAX_PROC_NUM - 1) do
+                processTable = PROCESS_TABLE + i * 16;
+                if ([processTable + 6] == 0) then
+                        if ([processTable + 4] == WAIT_PROCESS) then
+                                waitProcessPID = i;
+                                break;
+                        endif;
+                        if (waitSemaphorePID == -1 && [processTable + 4] == WAIT_SEMAPHORE) then
+                                waitSemaphorePID = i;
+                        endif;
+                        if ([processTable + 4] != TERMINATED && [processTable + 4] != ALLOCATED && [processTable + 4] != RUNNING) then
+                                if (highTickPID == -1 || [processTable] > [PROCESS_TABLE + highTickPID * 16]) then
+                                        highTickPID = i;
+                                endif;
+                        endif;
+                endif;
+                i = i + 1;
+        endwhile;
+
+        alias pid R6;
+        pid = -1;
+        if (waitProcessPID != -1) then
+                pid = waitProcessPID;
+        else if (waitSemaphorePID != -1) then
+                pid =  waitSemaphorePID;
+        else if (highTickPID != -1) then
+                pid = highTickPID;
+        endif;
+        endif;
+        endif;
+        
+        if (pid == -1) then
+                [SYSTEM_STATUS_TABLE + 5] = 0;
+                return;
+        endif;
+
+        processTable = PROCESS_TABLE + pid * 16;
+        [processTable] = 0;
+
+        alias pageTable R3;
+        // pageTable = PAGE_TABLE_BASE + pid * 20;
+        pageTable = [processTable + 14];
+
+        alias i R4;
+        i = 2;
+        while (i < 10) do
+                if ([pageTable + 2 * i] != -1) then
+                        // Heap / Stack
+                        if ((i < 4 && [MEMORY_FREE_LIST + [pageTable + 2 * i]] == 1) || (i > 7)) then
+                                // Get Swap Block
+                                multipush(R1,R2,R3,R4,R6,R7);
+                                R1 = 6;
+                                call MOD_2;
+                                R5 = R0;
+                                multipop(R1,R2,R3,R4,R6,R7);
+
+                                [DISK_MAP_TABLE + pid * 10 + i] = R5;
+
+                                // Disk Store
+                                multipush(R1,R2,R3,R4,R5,R6,R7);
+                                R1 = 1;
+                                R2 = SWAPPER_DAEMON;
+                                R3 = [pageTable + 2 * i];
+                                R4 = R5;
+                                call MOD_4;
+                                multipop(R1,R2,R3,R4,R5,R6,R7);
+                        endif;
+
+                        // Release Page for Heap, Stack and Code
+                        if ((i > 3) || (i < 4 && [MEMORY_FREE_LIST + [pageTable + 2 * i]] == 1)) then
+                                multipush(R1,R2,R3,R4,R5,R6,R7);
+                                R1 = 2;
+                                R2 = [pageTable + 2 * i];
+                                call MOD_2;
+                                multipop(R1,R2,R3,R4,R5,R6,R7);
+
+                                [pageTable + 2 * i] = -1;
+                                [pageTable + 2 * i + 1] = "0000";
+                        endif;
+                endif;
+                i = i + 1;
+        endwhile;
+
+        [PROCESS_TABLE + pid * 16 + 6] = 1;
+
+        [SYSTEM_STATUS_TABLE + 4] = [SYSTEM_STATUS_TABLE + 4] + 1;
+
+        [SYSTEM_STATUS_TABLE + 5] = 0;
+
+        return;
+endif;
+
+if (funNum == SWAP_IN) then
+        // SWAP_IN
+        alias pid R3;
+        pid = -1;
+
+        alias i R4;
+        i = 3;
+        while (i < MAX_PROC_NUM - 1) do
+                if ([PROCESS_TABLE + i * 16 + 6] == 1) then
+                        if ([PROCESS_TABLE + i * 16 + 4] == READY) then
+                                if (pid == -1 || [PROCESS_TABLE + i * 16] > [PROCESS_TABLE + pid * 16]) then
+                                        pid = i;
+                                endif;
+                        endif;
+                endif;
+                i = i + 1;
+        endwhile;
+
+        if (pid == -1) then
+                [SYSTEM_STATUS_TABLE + 5] = 0;
+                return;
+        endif;
+
+        [PROCESS_TABLE + pid * 16] = 0;
+
+        alias diskTable R5;
+        diskTable = DISK_MAP_TABLE + pid * 10;
+
+        alias pageNum R6;
+
+        alias pageTable R7;
+        // pageTable = PAGE_TABLE_BASE + pid * 20;
+        pageTable = [PROCESS_TABLE + pid * 16 + 14];
+
+        i = 2;
+        while (i < 10) do
+                if ((i < 4 || i > 7) && [diskTable + i] != -1) then
+                        // Get Free Page
+                        multipush(R1,R2,R3,R4,R5,R7);
+                        R1 = 1;
+                        call MOD_2;
+                        pageNum = R0;
+                        multipop(R1,R2,R3,R4,R5,R7);
+
+                        [pageTable + 2 * i] = pageNum;
+                        [pageTable + 2 * i + 1] = "0110";
+
+                        // Disk Load
+                        multipush(R1,R2,R3,R4,R5,R6,R7);
+                        R1 = 2;
+                        R2 = SWAPPER_DAEMON;
+                        R3 = pageNum;
+                        R4 = [diskTable + i];
+                        call MOD_4;
+                        multipop(R1,R2,R3,R4,R5,R6,R7);
+
+                        // Release Block
+                        multipush(R1,R2,R3,R4,R5,R6,R7);
+                        R1 = 4;
+                        R2 = [diskTable + i];
+                        R3 = SWAPPER_DAEMON;
+                        call MOD_2;
+                        multipop(R1,R2,R3,R4,R5,R6,R7);
+
+                        [diskTable + i] = -1;
+                endif;
+                i = i + 1;
+        endwhile;
+
+        [PROCESS_TABLE + pid * 16 + 6] = 0;
+
+        [SYSTEM_STATUS_TABLE + 4] = [SYSTEM_STATUS_TABLE + 4] - 1;
+
+        [SYSTEM_STATUS_TABLE + 5] = 0;
+
+        return;
+endif;
+
+return;

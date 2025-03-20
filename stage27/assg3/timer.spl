@@ -1,0 +1,53 @@
+[PROCESS_TABLE + ( [SYSTEM_STATUS_TABLE + 1] * 16) + 13] = SP;
+SP = [PROCESS_TABLE + ([SYSTEM_STATUS_TABLE + 1] * 16) + 11] * 512 - 1;
+
+backup;
+
+if ([SYSTEM_STATUS_TABLE + 5] != 0) then
+        if ([SYSTEM_STATUS_TABLE + 1] == SWAPPER_DAEMON) then
+                R1 = [SYSTEM_STATUS_TABLE + 5];
+                R2 = [SYSTEM_STATUS_TABLE + 1];
+                call MOD_6;
+        // else
+                // Swapping is ongoing, but th daemon is blocked 
+                // for some disk operation and idle is being run now.
+                // Skip to th en to perform context switch.
+        endif;
+else
+        if ([SYSTEM_STATUS_TABLE + 2] < MEM_LOW) then
+                [SYSTEM_STATUS_TABLE + 5] = SWAP_OUT;
+        else if ([SYSTEM_STATUS_TABLE + 4] > 0) then
+                if ([SYSTEM_STATUS_TABLE + 2] > MEM_HIGH) then
+                        [SYSTEM_STATUS_TABLE + 5] = SWAP_IN;
+                else
+                        alias i R1;
+                        i = 0;
+                        while (i < MAX_PROC_NUM) do
+                                if ([PROCESS_TABLE + i * 16 + 6] == 1 && [PROCESS_TABLE + i * 16] > MAX_TICK) then
+                                        [SYSTEM_STATUS_TABLE + 5] = SWAP_IN;
+                                        break;
+                                endif;
+                                i = i + 1;
+                        endwhile;
+                endif;
+        endif;
+        endif;
+endif;
+
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE+1] * 16 + 4] = READY;
+
+alias i R1;
+i = 0;
+while (i < MAX_PROC_NUM) do
+        [PROCESS_TABLE + i * 16] = [PROCESS_TABLE + i * 16] + 1; // TICK
+        i = i + 1;
+endwhile;
+
+call MOD_5;
+
+restore;
+
+SP = [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 13];
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 9] = 0;
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 12] = 0;
+ireturn;

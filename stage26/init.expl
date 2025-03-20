@@ -1,0 +1,25 @@
+int main()
+{
+decl
+        int t;
+        str userName, passWord;
+enddecl
+begin
+        while (1 == 1) do
+                t = exposcall("Write",-2,"username:");
+                t = exposcall("Read",-1,userName);
+                t = exposcall("Write",-2,"password:");
+                t = exposcall("Read",-1,passWord);
+
+                t = exposcall("Login",userName,passWord);
+
+                if (t == -1) then
+                        t = exposcall("Write",-2,"Invalid credentials");
+                else if (t == -2) then
+                        t = exposcall("Write",-2,"Permission denied");
+                endif;
+                endif;
+        endwhile;
+        return 0;
+end
+}

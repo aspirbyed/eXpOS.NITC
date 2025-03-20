@@ -1,0 +1,40 @@
+// Logout
+alias userSP R1;
+userSP = SP;
+
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 13] = SP;
+SP = [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 11] * 512 - 1;
+
+alias returnAddress R2;
+returnAddress = [PTBR + 2 * (userSP - 1) / 512] * 512 + (userSP - 1) % 512;
+
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 9] = 28;
+
+if ([SYSTEM_STATUS_TABLE + 1] != 2) then
+        [returnAddress] = -1;
+else
+        multipush(R1,R2);
+        R1 = 5;
+        R2 = [SYSTEM_STATUS_TABLE + 1];
+        call MOD_1;
+        multipop(R1,R2);
+
+        [PROCESS_TABLE + 2 * 16 + 4] = TERMINATED;
+        [[PTBR + 16] * 512] = [[PTBR + 8] * 512 + 1];
+
+        [PROCESS_TABLE + 2 * 16 + 13] = 8 * 512;
+
+        [PROCESS_TABLE + 1 * 16 + 4] = READY;
+        [PROCESS_TABLE + 1 * 16 + 5] = -1;
+
+        [SYSTEM_STATUS_TABLE + 0] = 0;
+
+        multipush(R1,R2);
+        call MOD_5;
+        multipop(R1,R2);
+endif;
+
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 9] = 0;
+SP = userSP;
+ireturn;
+

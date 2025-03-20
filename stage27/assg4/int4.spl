@@ -1,0 +1,161 @@
+alias userSP R1;
+userSP = SP;
+
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 13] = SP;
+SP = [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 11] * 512 - 1;
+
+alias syscall R2;
+syscall = [[PTBR + 2 * (userSP - 5) / 512] * 512 + (userSP - 5) % 512];
+
+alias returnAddress R3;
+returnAddress = [PTBR + 2 * (userSP - 1) / 512] * 512 + (userSP - 1) % 512;
+
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 9] = syscall;
+
+alias fileName R6;
+alias found R7;
+alias i R8;
+alias inodeIndex R9;
+
+fileName = [[PTBR + 2 * ((userSP - 4) / 512)] * 512 + (userSP - 4) % 512];
+found = -1;
+i = 0;
+inodeIndex = -1;
+
+while(i < MAX_FILE_NUM) do
+        if ([INODE_TABLE + i * 16 + 1] == fileName && found == -1) then
+                found = i;
+        endif;
+        if ([INODE_TABLE + i * 16 + 1] == -1 && inodeIndex == -1) then
+                inodeIndex = i;   
+        endif;
+        i = i + 1;
+endwhile;
+
+if (syscall == 1) then
+        // Create File
+        if (found != -1) then
+                [returnAddress] = 0; // Success
+        else
+                if (inodeIndex == -1) then
+                        [returnAddress] = -1; // Failure
+                else
+                        alias permission R7;
+                        permission = [[PTBR + 2 * ((userSP - 3) / 512)] * 512 + (userSP - 3) % 512];
+
+                        alias rootEntry R8;
+                        alias inodeEntry R4;
+                        
+                        inodeEntry = INODE_TABLE + inodeIndex * 16;
+                        rootEntry = ROOT_FILE + inodeIndex * 8;
+
+                        [inodeEntry + 0] = DATA; // FILE TYPE
+                        [inodeEntry + 1] = fileName; // FILE NAME
+                        [inodeEntry + 2] = 0; // FILE SIZE
+                        [inodeEntry + 3] = [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 3]; // USER ID
+                        [inodeEntry + 4] = permission; // PERMISSION
+                        [inodeEntry + 8] = -1; // DATA BLOCK 1
+                        [inodeEntry + 9] = -1; // DATA BLOCK 2
+                        [inodeEntry + 10] = -1; // DATA BLOCK 3
+                        [inodeEntry + 11] = -1; // DATA BLOCK 4 
+
+                        [rootEntry + 0] = fileName; // FILE NAME
+                        [rootEntry + 1] = 0; // FILE SIZE
+                        [rootEntry + 2] = DATA; // FILE TYPE
+                        [rootEntry + 3] = [USER_TABLE + [inodeEntry + 3] * 2]; // USER NAME
+                        [rootEntry + 4] = permission; // PERMISSION
+
+                        [returnAddress] = 0; // Success
+                endif;
+        endif;
+endif;
+
+if (syscall == 4) then
+        // Delete File
+        alias inodeEntry R4;
+        inodeIndex = found;
+        inodeEntry = INODE_TABLE + inodeIndex * 16;
+        if (inodeIndex == -1) then
+                [returnAddress] = 0; // File Not Found / Success
+        else if ([inodeEntry + 0] != DATA) then
+                [returnAddress] = -1; // Permission denied, Not valid entry
+		print "Bruh";
+        else if ([inodeEntry + 4] == EXCLUSIVE && [SYSTEM_STATUS_TABLE + 0] != 1 && [inodeEntry + 3] != [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 3]) then
+                [returnAddress] = -1; // Permission denied, Not valid entry
+		print [SYSTEM_STATUS_TABLE + 0];
+		print [inodeEntry + 3];
+		print [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 3];
+        else
+                multipush(R1,R2,R3,R4,R6,R7,R8,R9);
+                R1 = 4;
+                R2 = inodeIndex;
+                R3 = [SYSTEM_STATUS_TABLE + 1];
+                call MOD_0;
+                multipop(R1,R2,R3,R4,R6,R7,R8,R9);
+
+                if ([FILE_STATUS_TABLE + inodeIndex * 4 + 1] != -1) then
+                        multipush(R1,R2,R3,R4,R6,R7,R8,R9);
+                        R1 = 5;
+                        R2 = inodeIndex;
+                        R3 = [SYSTEM_STATUS_TABLE + 1];
+                        call MOD_0;
+                        multipop(R1,R2,R3,R4,R6,R7,R8,R9);
+
+                        [returnAddress] = -2; // File is open
+                else
+                        alias bufferIndex R7;
+                        alias blockNum R6;
+                        blockNum = inodeEntry + 8;
+
+                        i = 0;
+                        while (i < MAX_BUFFER) do
+                                if ([blockNum] != -1) then
+                                        bufferIndex = [blockNum] % MAX_BUFFER;
+                                        
+                                        if ([blockNum] == [BUFFER_TABLE + bufferIndex * 4] && [BUFFER_TABLE + bufferIndex * 4 + 1] == 1) then
+                                                [BUFFER_TABLE + bufferIndex * 4 + 1] = 0;
+                                        endif;
+                                        
+                                        multipush(R1,R2,R3,R4,R6,R7,R8,R9);
+                                        R1 = 4;
+                                        R2 = [blockNum];
+                                        R3 = [SYSTEM_STATUS_TABLE + 1];
+                                        call MOD_2;
+                                        multipop(R1,R2,R3,R4,R6,R7,R8,R9);
+                                endif;
+                                blockNum = blockNum + 1;
+                                i = i + 1;
+                        endwhile;
+
+                        alias rootEntry R6;
+                        rootEntry = ROOT_FILE + inodeIndex * 8;
+
+                        i = 0;
+                        while (i < 16) do
+                                [inodeEntry + i] = -1;
+                                i = i + 1;
+                        endwhile;
+
+                        i = 0;
+                        while (i < 8) do
+                                [rootEntry + i] = -1;
+                                i = i + 1;
+                        endwhile;
+
+                        multipush(R1,R2,R3,R4,R6,R7,R8,R9);
+                        R1 = 5;
+                        R2 = inodeIndex;
+                        R3 = [SYSTEM_STATUS_TABLE + 1];
+                        call MOD_0;
+                        multipop(R1,R2,R3,R4,R6,R7,R8,R9); 
+
+                        [returnAddress] = 0; // Success
+                endif;
+        endif;
+        endif;
+        endif;
+endif;
+
+SP = userSP;
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 9] = 0;
+ireturn;

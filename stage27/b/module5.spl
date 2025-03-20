@@ -1,0 +1,81 @@
+//print "MOD5";
+alias currPID R0;
+currPID = [SYSTEM_STATUS_TABLE+1];
+
+multipush(BP);
+
+alias processTable R1;
+processTable = PROCESS_TABLE + currPID * 16;
+
+[processTable + 12] = SP % 512;
+[processTable + 14] = PTBR;
+[processTable + 15] = PTLR;
+
+alias newPID R2;
+
+if ([SYSTEM_STATUS_TABLE + 5] != 0) then
+        if ([PROCESS_TABLE + 15 * 16 + 4] == WAIT_DISK) then
+                newPID = 0;
+        else
+                newPID = SWAPPER_DAEMON;
+        endif;
+else
+        newPID = 0;
+
+        alias iter R3;
+        iter = currPID + 1;
+
+        //swapper daemon cannot be scheduled
+	if(iter > 14) then
+		iter = 1;
+	endif;
+
+	while(iter != currPID) do
+
+		//finding a non-swapped process
+		if(([PROCESS_TABLE + iter * 16 + 4] == CREATED || [PROCESS_TABLE + iter * 16 + 4] == READY) && [PROCESS_TABLE + iter * 16 + 6] != 1) then
+			newPID = iter;
+			break;
+		endif;
+	
+		iter = iter + 1;
+	
+		//dont schedule swapper daemon
+		if(iter > 14) then
+	
+			if(currPID == 0 || currPID == 15) then
+				iter = currPID;
+				break;
+			endif;
+		
+			iter = 1;
+		endif;
+	
+	endwhile;
+
+	if(iter == currPID) then
+		newPID = 0;
+	endif;
+
+endif;
+
+SP = [PROCESS_TABLE + newPID * 16 + 11] * 512 + [PROCESS_TABLE + newPID * 16 + 12];
+
+PTBR = [PROCESS_TABLE + newPID * 16 + 14];
+PTLR = [PROCESS_TABLE + newPID * 16 + 15];
+
+[SYSTEM_STATUS_TABLE + 1] = newPID;
+
+if ([PROCESS_TABLE + newPID * 16 + 4] == CREATED) then
+        SP = [PROCESS_TABLE + newPID * 16 + 13];
+        BP = [[PROCESS_TABLE + newPID * 16 + 11] * 512];
+        [PROCESS_TABLE + newPID * 16 + 4] = RUNNING;
+        [PROCESS_TABLE + newPID * 16 + 9] = 0;
+        ireturn;
+endif;
+
+[PROCESS_TABLE + newPID * 16 + 4] = RUNNING;
+
+multipop(BP);
+
+return;

@@ -36,8 +36,8 @@ else if (fileDesc >= 0 && fileDesc <= 7 && [[PROCESS_TABLE + [SYSTEM_STATUS_TABL
         alias inodeIndex R4;
         inodeIndex = [OPEN_FILE_TABLE + fileIndex * 4 + 0];
 
-        if ([PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 3] == 1 || [INODE_TABLE + inodeIndex * 16 + 3] == [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 3] || [INODE_TABLE + inodeIndex * 16 + 4] == OPEN_ACCESS) then
-                multipush(R1,R2,R3,R4,R5);
+	if ([PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 3] == 1 || [INODE_TABLE + inodeIndex * 16 + 3] == [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 3] || [INODE_TABLE + inodeIndex * 16 + 4] == OPEN_ACCESS) then
+		multipush(R1,R2,R3,R4,R5);
                 R1 = 4; // Acquire Inode
                 R2 = inodeIndex;
                 R3 = [SYSTEM_STATUS_TABLE + 1];

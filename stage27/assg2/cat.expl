@@ -1,0 +1,31 @@
+int main(){
+decl
+        int t, fd;
+        str fileName, data;
+enddecl
+begin
+        t = exposcall("Read",-1,fileName);
+        fd = exposcall("Open",fileName);
+        if (fd == -1) then
+                t = exposcall("Write",-2,"FileNotFound");
+        else if (fd == -2) then
+                t = exposcall("Write",-2,"OpenFileLimit");
+        else if (fd == -3) then
+                t = exposcall("Write",-2,"ResourceLimit");
+        else 
+                t = exposcall("Seek",fd,0);
+                while (1 == 1) do
+                        t = exposcall("Read",fd,data);
+                        if (t == -2) then
+                                t = exposcall("Write",-2,"EOF");
+                                break;
+                        endif;
+                        t = exposcall("Write",-2,data);
+                endwhile;
+                t = exposcall("Close",fd);
+        endif;
+        endif;
+        endif;
+        return 0;
+end
+}

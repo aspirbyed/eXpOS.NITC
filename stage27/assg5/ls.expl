@@ -1,0 +1,21 @@
+int main(){
+decl
+        int t, fd;
+        str fileName;
+enddecl
+begin
+        fd = exposcall("Open","root");
+        while(1 == 1) do
+                t = exposcall("Read",fd,fileName);
+                if (t == -2) then
+                        break;
+                endif;
+                t = exposcall("Seek",fd,7);
+                if (fileName == "-1") then
+                        continue;
+                endif;
+                t = exposcall("Write",-2,fileName);
+        endwhile;
+        return 0;
+end
+}

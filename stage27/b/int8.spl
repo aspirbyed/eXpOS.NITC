@@ -1,0 +1,134 @@
+print "INT8";
+alias userSP R1;
+userSP = SP;
+alias pid R2;
+
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 13] = SP;
+SP = [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 11] * 512 - 1;
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 9] = 8;
+
+multipush(R1);
+R1 = 1;
+call MOD_1;
+pid = R0;
+multipop(R1);
+
+if (pid == -1) then
+	[[PTBR+ 2 * ((userSP - 1) / 512)] * 512 + (userSP - 1) % 512] = -1;
+else
+	if([PTBR + 4] == -1) then
+		multipush(R1,R2);
+		R1 = 1;
+		call MOD_2;
+                multipop(R1,R2);
+		[PTBR + 4] = R0;
+		[PTBR + 5] = "0110";
+
+                multipush(R1,R2);
+		R1 = 1;
+		call MOD_2;
+                multipop(R1,R2);
+		[PTBR + 6] = R0;
+		[PTBR + 7] = "0110";
+	endif;
+
+	alias ptbr R3; // Child PTBR
+	ptbr = PAGE_TABLE_BASE + pid * 20;
+
+	// Stack of child
+	multipush(R1,R2,R3);
+	R1 = 1;
+	call MOD_2;
+        multipop(R1,R2,R3);
+	[ptbr + 16] = R0;
+	[ptbr + 17] = "0110";
+
+        multipush(R1,R2,R3);
+	R1 = 1;
+	call MOD_2;
+        multipop(R1,R2,R3);
+	[ptbr + 18] = R0;
+	[ptbr + 19] = "0110";
+
+	alias UAPN R4;
+	multipush(R1,R2,R3);
+	R1 = 1;
+	call MOD_2;
+	UAPN = R0;
+	multipop(R1,R2,R3);
+
+        alias processTableChild R5;
+        processTableChild = PROCESS_TABLE + pid * 16;
+        alias processTableParent R6;
+        processTableParent = PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16;
+
+	// Proces Table for child
+	[processTableChild + 3] = [processTableParent + 3]; // USERID
+	[processTableChild + 6] = [processTableParent + 6]; // SWAP FLAG
+	[processTableChild + 7] = [processTableParent + 7]; // INODE INDEX
+	[processTableChild + 10] = [processTableParent + 10]; // USER AREA SWAP STATUS
+	[processTableChild + 13] = [processTableParent + 13]; // USER STACK POINTER (UPTR)
+	[processTableChild + 2] = [SYSTEM_STATUS_TABLE + 1]; // PPID
+	[processTableChild + 11] = UAPN; // USER AREA PAGE NUMBER
+	[processTableChild + 9] = 0; // MODE FLAG
+	[processTableChild + 0] = 0; // TICK
+	[processTableChild + 12] = 0; // KERNEL STACK POINTER (KPTR)
+	[processTableChild + 4] = CREATED;
+
+	// Per-process Resource table for child
+	alias i R7;
+	i = 0;
+	while (i < 8) do
+		[[processTableChild + 11] * 512 + 496 + 2 * i] = [[processTableParent + 11] * 512 + 496 + 2 * i];
+		[[processTableChild + 11] * 512 + 496 + 2 * i + 1] = [[processTableParent + 11] * 512 + 496 + 2 * i + 1];
+		if ([[processTableChild + 11] * 512 + 496 + 2 * i] == SEMAPHORE) then
+			[SEMAPHORE_TABLE + [[processTableChild + 11] * 512 + 496 + 2 * i + 1] * 4 + 1] = [SEMAPHORE_TABLE + [[processTableChild + 11] * 512 + 496 + 2 * i + 1] * 4 + 1] + 1;
+                else if ([[processTableChild + 11] * 512 + 496 + 2 * i] == FILE) then
+                        [OPEN_FILE_TABLE + [[processTableChild + 11] * 512 + 496 + 2 * i + 1] * 4 + 1] = [OPEN_FILE_TABLE + [[processTableChild + 11] * 512 + 496 + 2 * i + 1] * 4 + 1] + 1;
+                endif;
+		endif;
+		i = i + 1;
+	endwhile;
+
+	// Per-process Disk Map table for child
+	i = 2;
+	while (i < 10) do
+		[DISK_MAP_TABLE + pid * 10 + i] = [DISK_MAP_TABLE + [SYSTEM_STATUS_TABLE + 1] * 10 + i];
+		i = i + 1;
+	endwhile;
+
+	// Page Table of child
+	i = 0;
+	while (i < 16) do
+		if ([PTBR + i] != -1) then
+			[MEMORY_FREE_LIST + [PTBR + i]] = [MEMORY_FREE_LIST + [PTBR + i]] + 1;
+		endif;
+		[ptbr + i] = [PTBR + i];
+		[ptbr + i + 1] = [PTBR + i + 1];
+		i = i + 2;
+	endwhile;
+
+	// Copy User Stack Contents
+	// Page 1
+	i = 0;
+	while (i < 512) do
+		[[ptbr + 16] * 512 + i] = [[PTBR + 16] * 512 + i];
+		i = i + 1;
+	endwhile;
+	// Page 2
+	i = 0;
+	while (i < 512) do
+		[[ptbr + 18] * 512 + i] = [[PTBR + 18] * 512 + i];
+		i = i + 1;
+	endwhile;
+
+	[[PROCESS_TABLE + pid * 16 + 11] * 512] = BP;
+
+	// Return value
+	[[PTBR + 2 * ((userSP - 1) / 512)] * 512 + (userSP - 1) % 512] = pid;
+	[[ptbr + 2 * ((userSP - 1) / 512)] * 512 + (userSP - 1) % 512] = 0;
+endif;
+
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 9] = 0;
+SP = [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 13];
+ireturn;

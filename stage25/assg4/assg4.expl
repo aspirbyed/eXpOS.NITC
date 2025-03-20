@@ -68,10 +68,9 @@ int merge(str out, str in1, str in2)
     x=exposcall("Close", fp1);
     x=exposcall("Close", fp2);
 
-    //x = exposcall("Delete",in1);
+    x = exposcall("Delete",in1);
     write("Merged");
-    //x = exposcall("Delete",in2);
-
+    x = exposcall("Delete",in2);
     return 0;
   end
 }

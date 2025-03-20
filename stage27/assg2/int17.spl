@@ -1,0 +1,59 @@
+// Login
+alias userSP R1;
+userSP = SP;
+
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 13] = SP;
+SP = [PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 11] * 512 - 1;
+
+alias returnAddress R2;
+returnAddress = [PTBR + 2 * (userSP - 1) / 512] * 512 + (userSP - 1) % 512;
+
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 9] = 27;
+
+if ([SYSTEM_STATUS_TABLE + 1] != 1) then
+        [returnAddress] = -2;
+else
+        alias userName R3;
+        userName = [[PTBR + 2 * (userSP - 4) / 512] * 512 + (userSP - 4) % 512];
+
+        alias passWord R4;
+        passWord = [[PTBR + 2 * (userSP - 3) / 512] * 512 + (userSP - 3) % 512];
+
+        alias i R5;
+        i = 0;
+        while (i < MAX_USER_NUM) do
+                if ([USER_TABLE + i * 2] == userName) then
+                        break;
+                endif;
+                i = i + 1;
+        endwhile;
+
+        if (i == MAX_USER_NUM) then
+                [returnAddress] = -1;
+        else
+                encrypt passWord;
+
+                if (passWord != [USER_TABLE + i * 2 + 1]) then
+                        [returnAddress] = -1;
+                else
+                        [PROCESS_TABLE + 2 * 16 + 2] = 1;
+                        [PROCESS_TABLE + 2 * 16 + 3] = i;
+                        [PROCESS_TABLE + 2 * 16 + 4] = CREATED;
+
+                        [PROCESS_TABLE + 1 * 16 + 4] = WAIT_PROCESS;
+                        [PROCESS_TABLE + 1 * 16 + 5] = 2;
+
+                        [SYSTEM_STATUS_TABLE + 0] = i;
+
+                        multipush(R1,R2,R3,R4,R5);
+                        call MOD_5;
+                        multipop(R1,R2,R3,R4,R5);
+
+                        [returnAddress] = 0;
+                endif;
+        endif;
+endif;
+
+[PROCESS_TABLE + [SYSTEM_STATUS_TABLE + 1] * 16 + 9] = 0;
+SP = userSP;
+ireturn;

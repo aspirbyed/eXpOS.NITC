@@ -1,0 +1,57 @@
+alias currPID R0;
+currPID = [SYSTEM_STATUS_TABLE+1];
+
+multipush(BP);
+
+alias processTable R1;
+processTable = PROCESS_TABLE + currPID * 16;
+
+[processTable + 12] = SP % 512;
+[processTable + 14] = PTBR;
+[processTable + 15] = PTLR;
+
+alias newPID R2;
+
+if ([SYSTEM_STATUS_TABLE + 5] != 0) then
+        if ([PROCESS_TABLE + 15 * 16 + 4] == WAIT_DISK) then
+                newPID = 0;
+        else
+                newPID = SWAPPER_DAEMON;
+        endif;
+else
+        newPID = 0;
+
+        alias i R3;
+        i = currPID + 1;
+
+        while(i < MAX_PROC_NUM - 1) do
+                if ([PROCESS_TABLE + i * 16 + 6] != 1) then
+                        if([PROCESS_TABLE + i * 16 + 4] == CREATED || [PROCESS_TABLE + i * 16 + 4] == READY) then
+                                newPID = i;
+                                break;
+                        endif;
+                endif;
+                i = i + 1;
+        endwhile;
+endif;
+
+PTBR = [PROCESS_TABLE + newPID * 16 + 14];
+PTLR = [PROCESS_TABLE + newPID * 16 + 15];
+
+[SYSTEM_STATUS_TABLE + 1] = newPID;
+
+if ([PROCESS_TABLE + newPID * 16 + 4] == CREATED) then
+        SP = [PROCESS_TABLE + newPID * 16 + 13];
+        BP = [[PROCESS_TABLE + newPID * 16 + 11] * 512];
+        [PROCESS_TABLE + newPID * 16 + 4] = RUNNING;
+        [PROCESS_TABLE + newPID * 16 + 9] = 0;
+        ireturn;
+endif;
+
+[PROCESS_TABLE + newPID * 16 + 4] = RUNNING;
+
+SP = [PROCESS_TABLE + newPID * 16 + 11] * 512 + [PROCESS_TABLE + newPID * 16 + 12];
+
+multipop(BP);
+
+return;

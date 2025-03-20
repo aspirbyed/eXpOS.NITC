@@ -1,0 +1,33 @@
+load --library ../expl/library.lib
+load --module 0 ../stage27/assg2/module0.xsm
+load --module 1 ../stage27/assg2/module1.xsm
+load --module 2 ../stage27/assg2/module2.xsm
+load --module 3 ../stage27/assg2/module3.xsm
+load --module 4 ../stage27/assg2/module4.xsm
+load --module 5 ../stage27/assg2/module5.xsm
+load --module 6 ../stage27/assg2/module6.xsm
+load --module 7 ../stage27/assg2/module7.xsm
+load --exhandler ../stage27/assg2/exhandler.xsm
+load --int=timer ../stage27/assg2/timer.xsm
+load --int=disk ../stage27/assg2/disk.xsm
+load --int=console ../stage27/assg2/console.xsm
+load --int=4 ../stage27/assg2/int4.xsm
+load --int=5 ../stage27/assg2/int5.xsm
+load --int=6 ../stage27/assg2/int6.xsm
+load --int=7 ../stage27/assg2/int7.xsm
+load --int=8 ../stage27/assg2/int8.xsm
+load --int=9 ../stage27/assg2/int9.xsm
+load --int=10 ../stage27/assg2/int10.xsm
+load --int=11 ../stage27/assg2/int11.xsm
+load --int=12 ../stage27/assg2/int12.xsm
+load --int=13 ../stage27/assg2/int13.xsm
+load --int=14 ../stage27/assg2/int14.xsm
+load --int=15 ../stage27/assg2/int15.xsm
+load --int=16 ../stage27/assg2/int16.xsm
+load --int=17 ../stage27/assg2/int17.xsm
+load --exec ../stage27/assg2/pid.xsm
+load --exec ../stage27/assg2/assg2.xsm
+load --shell ../stage27/assg2/shell.xsm
+load --init ../stage27/assg2/init.xsm
+load --idle ../stage27/assg2/idle.xsm
+load --os ../stage27/assg2/os.xsm

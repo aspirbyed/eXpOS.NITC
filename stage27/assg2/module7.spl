@@ -1,0 +1,298 @@
+// Init / Login Code
+loadi(65, 7);
+
+// Shell Code
+loadi(67, 9);
+loadi(68, 10);
+
+// Library Code
+loadi(63, 13);
+loadi(64, 14);
+
+// Inode + User Table
+loadi(59, 3);
+loadi(60, 4);
+
+// Disk Free List
+loadi(61, 2);
+
+// Root File
+loadi(62, 5);
+
+// INT 0 : Exception Handler
+loadi(2, 15);
+loadi(3, 16);
+
+// INT 1 : Timer
+loadi(4, 17);
+loadi(5, 18);
+
+// INT 2 : Disk
+loadi(6, 19);
+loadi(7, 20);
+
+// INT 3 : Console
+loadi(8, 21);
+loadi(9, 22);
+
+// INT 4 : Create, Delete
+loadi(10, 23);
+loadi(11, 24);
+
+// INT 5 : Seek, Open, Close
+loadi(12, 25);
+loadi(13, 26);
+
+// INT 6 : Read
+loadi(14, 27);
+loadi(15, 28);
+
+// INT 7 : Write
+loadi(16, 29);
+loadi(17, 30);
+
+// INT 8 : Fork
+loadi(18, 31);
+loadi(19, 32);
+
+// INT 9 : Exec
+loadi(20, 33);
+loadi(21, 34);
+
+// INT 10 : Exit
+loadi(22, 35);
+loadi(23, 36);
+
+// INT 11 : Wait/Signal, Getpid/Getppid
+loadi(24, 37);
+loadi(25, 38);
+
+// INT 12 : Logout
+loadi(26, 39);
+loadi(27, 40);
+
+// INT 13 : Semget, Semrelease
+loadi(28, 41);
+loadi(29, 42);
+
+// INT 14 : SemLock, SemUnLock
+loadi(30, 43);
+loadi(31, 44);
+
+// INT 15 : Shutdown
+loadi(32, 45);
+loadi(33, 46);
+
+// INT 16 : Newusr, Remusr, Setpwd, Getuname, Getuid
+loadi(34, 47);
+loadi(35, 48);
+
+// INT 17 : Login
+loadi(36, 49);
+loadi(37, 50);
+
+// Module 0 : Resource Manager
+loadi(40, 53);
+loadi(41, 54);
+
+// Module 1: Process Manager
+loadi(42, 55);
+loadi(43, 56);
+
+// Module 2: Memory Manager
+loadi(44, 57);
+loadi(45, 58);
+
+// Module 3 : File Manager
+loadi(46, 59);
+loadi(47, 60);
+
+// Module 4 : Device Manager
+loadi(48, 61);
+loadi(49, 62);
+
+// Module 5 : Context Switch (Scheduler)
+loadi(50, 63);
+loadi(51, 64);
+
+// Module 6 : Pager Module
+loadi(52, 65);
+loadi(53, 66);
+
+// For INIT
+PTBR = PAGE_TABLE_BASE + 20;
+PTLR = 10;
+
+// Page Table : INIT
+// Library
+[PTBR + 0] = 63;
+[PTBR + 1] = "0100";
+[PTBR + 2] = 64;
+[PTBR + 3] = "0100";
+
+// Heap
+[PTBR + 4] = -1;
+[PTBR + 5] = "0000";
+[PTBR + 6] = -1;
+[PTBR + 7] = "0000";
+
+// Code
+[PTBR + 8] = 65;
+[PTBR + 9] = "0100";
+[PTBR + 10] = -1;
+[PTBR + 11] = "0000";
+[PTBR + 12] = -1;
+[PTBR + 13] = "0000";
+[PTBR + 14] = -1;
+[PTBR + 15] = "0000";
+
+// Stack
+[PTBR + 16] = 66;
+[PTBR + 17] = "0110";
+[PTBR + 18] = -1;
+[PTBR + 19] = "0000";
+
+alias table R1;
+table = PROCESS_TABLE + 16;
+
+// Process Table : INIT
+[table + 0] = 0; // TICK
+[table + 1] = 1;
+[table + 3] = 0; // USER ID : ROOT
+[table + 4] = CREATED;
+[table + 11] = 77;
+[table + 13] = 8 * 512;
+[table + 12] = 0;
+[table + 14] = PTBR;
+[table + 15] = PTLR;
+
+[66 * 512] = [65 * 512 + 1];
+
+// Process Table STATUS Initialisation
+alias i R0;
+i = 3;
+while (i < MAX_PROC_NUM - 1) do
+        [PROCESS_TABLE + i * 16 + 0] = 0;
+        [PROCESS_TABLE + i * 16 + 4] = TERMINATED;
+        i = i + 1;
+endwhile;
+
+// Semaphore Table Initialisation
+i = 0;
+while (i < MAX_SEM_COUNT) do
+        [SEMAPHORE_TABLE + i * 4 + 0] = -1;
+        [SEMAPHORE_TABLE + i * 4 + 1] = 0;
+        i = i + 1;
+endwhile;
+
+// Per-Process Resource table for init
+table = [table + 11] * 512;
+i = 496;
+while (i < 512) do
+        [table + i] = -1;
+        i = i + 2;
+endwhile;
+
+// Memort Free List Initialisation
+i = 0;
+while (i < 128) do
+        if (i < 83) then
+                [MEMORY_FREE_LIST + i] = 1;
+        else
+                [MEMORY_FREE_LIST + i] = 0;
+        endif;
+        i = i + 1;
+endwhile;
+
+[DISK_STATUS_TABLE + 0] = 0; // Disk Status Table Initialisation
+[TERMINAL_STATUS_TABLE + 0] = 0; // Terminal Status Table Initialisation
+[SYSTEM_STATUS_TABLE + 2] = 45; // MEM_FREE_COUNT
+[SYSTEM_STATUS_TABLE + 3] = 0; // WAIT_MEM_COUNT
+[SYSTEM_STATUS_TABLE + 4] = 0; // SWAPPED_COUNT
+[SYSTEM_STATUS_TABLE + 5] = 0; // PAGING_STATUS
+
+// File Status Table
+i = 0;
+while (i < MAX_FILE_NUM) do
+	[FILE_STATUS_TABLE + i * 4 + 0] = -1;
+	[FILE_STATUS_TABLE + i * 4 + 1] = -1;
+	i = i + 1;
+endwhile;
+
+// Buffer Table
+i = 0;
+while (i < MAX_BUFFER) do
+        [BUFFER_TABLE + i * 4 + 0] = -1;
+        [BUFFER_TABLE + i * 4 + 1] = 0;
+	[BUFFER_TABLE + i * 4 + 2] = -1;
+        i = i + 1;
+endwhile;
+
+// Open File Table
+i = 0;
+while (i < MAX_OPENFILE_NUM) do
+	[OPEN_FILE_TABLE + i * 4 + 0] = -1;
+	[OPEN_FILE_TABLE + i * 4 + 1] = 0;
+	i = i + 1;
+endwhile;
+
+PTBR = PAGE_TABLE_BASE + 40;
+
+// Page Table : SHELL
+// Library
+[PTBR + 0] = 63;
+[PTBR + 1] = "0100";
+[PTBR + 2] = 64;
+[PTBR + 3] = "0100";
+
+// Heap
+[PTBR + 4] = -1;
+[PTBR + 5] = "0000";
+[PTBR + 6] = -1;
+[PTBR + 7] = "0000";
+
+// Code
+[PTBR + 8] = 67;
+[PTBR + 9] = "0100";
+[PTBR + 10] = 68;
+[PTBR + 11] = "0100";
+[PTBR + 12] = -1;
+[PTBR + 13] = "0000";
+[PTBR + 14] = -1;
+[PTBR + 15] = "0000";
+
+// Stack
+[PTBR + 16] = 78;
+[PTBR + 17] = "0110";
+[PTBR + 18] = 79;
+[PTBR + 19] = "0110";
+
+table = PROCESS_TABLE + 32;
+
+// Process Table : SHELL
+[table + 0] = 0; // TICK
+[table + 1] = 2; // PID
+[table + 2] = 1; // PPID
+[table + 3] = 1; // USER ID : ROOT
+[table + 4] = TERMINATED; // STATE
+[table + 11] = 80; // UAPN
+[table + 13] = 8 * 512;
+[table + 12] = 0;
+[table + 14] = PTBR;
+[table + 15] = 10;
+
+[78 * 512] = [67 * 512 + 1];
+
+table = DISK_MAP_TABLE + 20;
+
+// Disk Map Table for SHELL
+i = 0;
+while (i < 10) do
+    [table + i] = -1;
+    i = i + 1;
+endwhile;
+
+[table + 4] = 9;
+[table + 5] = 10;
+
+return;

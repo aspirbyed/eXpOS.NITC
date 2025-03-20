@@ -1,0 +1,29 @@
+int main()
+{
+decl
+        int t, fd;
+        str uname, fileName, owner;
+enddecl
+begin
+        t = exposcall("Write", -2, "username:");
+        t = exposcall("Read", -1, uname);
+
+        fd = exposcall("Open","root");
+
+        while(1 == 1) do
+                t = exposcall("Read",fd,fileName);
+                if (t == -2) then
+                        break;
+                endif;
+                t = exposcall("Seek",fd,2);
+                t = exposcall("Read",fd,owner);
+                if (owner == uname AND fileName != "-1") then
+                        t = exposcall("Delete",fileName);
+                endif;
+                t = exposcall("Seek",fd,4);
+        endwhile;
+        t = exposcall("Close",fd);
+        t = exposcall("Write",-2,"AllFilesClosed");
+        return 0;
+end
+}
